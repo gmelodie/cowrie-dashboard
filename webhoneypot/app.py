@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import psycopg2
@@ -15,6 +16,11 @@ DB_PARAMS = {
 }
 
 _SKIP_HEADERS = {"host", "connection", "x-real-ip", "x-forwarded-for", "x-forwarded-proto"}
+
+# Bots POST credentials under many field names; normalise into username/password
+# so the stats queries (which look up form_data->>'username'/'password') see them.
+_USERNAME_KEYS = ("username", "user", "login", "uname", "name", "email", "userid", "user_id", "j_username")
+_PASSWORD_KEYS = ("password", "pass", "passwd", "pwd", "passwort", "j_password")
 
 
 def _db():
@@ -70,9 +76,67 @@ def _log_visit():
         g.visit_id = None
 
 
+def _basic_auth_creds():
+    auth = request.headers.get("Authorization", "")
+    if not auth.lower().startswith("basic "):
+        return None
+    try:
+        decoded = base64.b64decode(auth[6:].strip(), validate=False).decode("utf-8", errors="replace")
+    except Exception:
+        return None
+    if ":" not in decoded:
+        return None
+    u, p = decoded.split(":", 1)
+    return u, p
+
+
+def _capture_credentials():
+    creds = {}
+
+    if request.form:
+        for k, v in request.form.items():
+            creds[k] = v
+    elif request.is_json:
+        data = request.get_json(silent=True)
+        if isinstance(data, dict):
+            for k, v in data.items():
+                if isinstance(v, (str, int, float, bool)):
+                    creds[str(k)] = str(v)
+
+    basic = _basic_auth_creds()
+    if basic:
+        creds.setdefault("username", basic[0])
+        creds.setdefault("password", basic[1])
+
+    if not creds:
+        return
+
+    if "username" not in creds:
+        for k in _USERNAME_KEYS:
+            if creds.get(k):
+                creds["username"] = creds[k]
+                break
+    if "password" not in creds:
+        for k in _PASSWORD_KEYS:
+            if creds.get(k):
+                creds["password"] = creds[k]
+                break
+
+    visit_id = getattr(g, "visit_id", None)
+    try:
+        cur = _db().cursor()
+        cur.execute(
+            "INSERT INTO web_form_submissions (visit_id, form_data) VALUES (%s, %s)",
+            (visit_id, json.dumps(creds)),
+        )
+    except Exception:
+        pass
+
+
 @app.before_request
 def before_request():
     _log_visit()
+    _capture_credentials()
 
 
 @app.route("/", methods=["GET"])
@@ -82,16 +146,6 @@ def index():
 
 @app.route("/login", methods=["POST"])
 def login():
-    form_data = {k: v for k, v in request.form.items()}
-    visit_id = getattr(g, "visit_id", None)
-    try:
-        cur = _db().cursor()
-        cur.execute(
-            "INSERT INTO web_form_submissions (visit_id, form_data) VALUES (%s, %s)",
-            (visit_id, json.dumps(form_data)),
-        )
-    except Exception:
-        pass
     return render_template("index.html", error="Invalid username or password.")
 
 
