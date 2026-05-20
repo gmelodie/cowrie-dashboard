@@ -11,8 +11,21 @@ for d in [
     "/cowrie/cowrie-git/var/lib/cowrie",
     "/cowrie/cowrie-git/var/lib/cowrie/tty",
     "/cowrie/cowrie-git/var/lib/cowrie/downloads",
+    "/cowrie/cowrie-git/var/run",
 ]:
     os.makedirs(d, exist_ok=True)
+
+# A crashed twistd leaves its pidfile behind. On restart, twistd sees the file,
+# checks if the recorded PID is alive — and since the new container's PID 1 is
+# always alive, it aborts with "Another twistd server is running, PID 1".
+for pidfile in (
+    "/cowrie/cowrie-git/var/run/cowrie.pid",
+    "/cowrie/cowrie-git/twistd.pid",
+):
+    try:
+        os.remove(pidfile)
+    except FileNotFoundError:
+        pass
 
 for path in [
     "/cowrie/cowrie-git/var/log/cowrie",
