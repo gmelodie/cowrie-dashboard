@@ -47,43 +47,36 @@ const STRINGS = {
     'section.clients':         'SSH Client Versions',
     'section.downloads':       'Downloads',
     'section.malware_hashes':  'Malware Hashes',
-    'section.web':             'HTTP Honeypot',
-    'section.web_timeseries':  'HTTP Traffic Over Time',
-    'section.web_creds':       'Form Submission Credentials',
-    'section.web_uas':         'HTTP User Agents',
-    'section.logs':            'Activity Logs',
+    'section.telnet':            'Telnet Honeypot',
+    'section.telnet_timeseries': 'Telnet Auth Over Time',
+    'section.telnet_creds':      'Telnet Credentials',
+    'section.logs':              'Activity Logs',
 
-    'card.web_visits':          'HTTP Visits',
-    'card.web_visits.meta':     'total HTTP requests logged',
-    'card.web_ips':             'Unique IPs',
-    'card.web_ips.meta':        'distinct web attacker IPs',
-    'card.web_submissions':     'Login Attempts',
-    'card.web_submissions.meta':'form submissions captured',
-    'card.web_paths':           'Unique Paths',
-    'card.web_paths.meta':      'distinct URLs probed',
-    'card.web_uas':             'Unique User Agents',
-    'card.web_uas.meta':        'distinct HTTP clients seen',
+    'card.telnet_connections':       'Connections',
+    'card.telnet_connections.meta':  'total telnet sessions',
+    'card.telnet_ips':               'Unique IPs',
+    'card.telnet_ips.meta':          'distinct telnet attacker IPs',
+    'card.telnet_auth':              'Auth Attempts',
+    'card.telnet_auth.meta':         'telnet login attempts',
+    'card.telnet_commands':          'Unique Commands',
+    'card.telnet_commands.meta':     'distinct shell inputs',
+    'card.telnet_cmd_sessions':      'Sessions w/ Input',
+    'card.telnet_cmd_sessions.meta': 'sessions that ran commands',
 
-    'chart.web_paths':      'Top Requested Paths',
-    'chart.web_ips':        'Top Source IPs',
-    'chart.web_usernames':  'Usernames',
-    'chart.web_passwords':  'Passwords',
+    'chart.telnet_commands':  'Top Commands',
+    'chart.telnet_ips':       'Top Source IPs',
+    'chart.telnet_usernames': 'Usernames',
+    'chart.telnet_passwords': 'Passwords',
 
-    'legend.visits':      'Visits',
-    'legend.submissions': 'Login Attempts',
+    'th.commands':   'Commands',
 
-    'th.user_agent': 'User Agent',
-    'th.visits':     'Visits',
-    'th.method':     'Method',
-    'th.path':       'Path',
-
-    'tab.web_visits':      'HTTP Visits',
-    'tab.web_submissions': 'Form Submissions',
+    'tab.telnet_sessions': 'Sessions',
+    'tab.telnet_auth':     'Auth Log',
 
     'th.first_seen':   'First Seen',
     'th.downloads':    'Downloads',
 
-    'card.ov_auth.meta': 'ssh + http login attempts',
+    'card.ov_auth.meta': 'ssh + telnet login attempts',
 
     'chart.by_hour':   'Attacks by Hour of Day',
     'chart.by_dow':    'Attacks by Day of Week',
@@ -199,43 +192,36 @@ const STRINGS = {
     'section.clients':         'Versões de Cliente SSH',
     'section.downloads':       'Downloads',
     'section.malware_hashes':  'Hashes de Malware',
-    'section.web':             'Honeypot HTTP',
-    'section.web_timeseries':  'Tráfego HTTP ao Longo do Tempo',
-    'section.web_creds':       'Credenciais de Formulários',
-    'section.web_uas':         'User Agents HTTP',
-    'section.logs':            'Registros de Atividade',
+    'section.telnet':            'Honeypot Telnet',
+    'section.telnet_timeseries': 'Autenticação Telnet ao Longo do Tempo',
+    'section.telnet_creds':      'Credenciais Telnet',
+    'section.logs':              'Registros de Atividade',
 
-    'card.web_visits':          'Visitas HTTP',
-    'card.web_visits.meta':     'requisições HTTP registradas',
-    'card.web_ips':             'IPs Únicos',
-    'card.web_ips.meta':        'IPs de atacantes web distintos',
-    'card.web_submissions':     'Tentativas de Login',
-    'card.web_submissions.meta':'formulários capturados',
-    'card.web_paths':           'Caminhos Únicos',
-    'card.web_paths.meta':      'URLs sondadas distintas',
-    'card.web_uas':             'User Agents Únicos',
-    'card.web_uas.meta':        'clientes HTTP distintos',
+    'card.telnet_connections':       'Conexões',
+    'card.telnet_connections.meta':  'sessões telnet totais',
+    'card.telnet_ips':               'IPs Únicos',
+    'card.telnet_ips.meta':          'IPs de atacantes telnet distintos',
+    'card.telnet_auth':              'Tentativas de Login',
+    'card.telnet_auth.meta':         'tentativas de login telnet',
+    'card.telnet_commands':          'Comandos Únicos',
+    'card.telnet_commands.meta':     'entradas de shell distintas',
+    'card.telnet_cmd_sessions':      'Sessões c/ Input',
+    'card.telnet_cmd_sessions.meta': 'sessões que rodaram comandos',
 
-    'chart.web_paths':      'Caminhos Mais Requisitados',
-    'chart.web_ips':        'IPs de Origem',
-    'chart.web_usernames':  'Usuários',
-    'chart.web_passwords':  'Senhas',
+    'chart.telnet_commands':  'Comandos Mais Usados',
+    'chart.telnet_ips':       'IPs de Origem',
+    'chart.telnet_usernames': 'Usuários',
+    'chart.telnet_passwords': 'Senhas',
 
-    'legend.visits':      'Visitas',
-    'legend.submissions': 'Tentativas de Login',
+    'th.commands':   'Comandos',
 
-    'th.user_agent': 'User Agent',
-    'th.visits':     'Visitas',
-    'th.method':     'Método',
-    'th.path':       'Caminho',
-
-    'tab.web_visits':      'Visitas HTTP',
-    'tab.web_submissions': 'Envios de Formulário',
+    'tab.telnet_sessions': 'Sessões',
+    'tab.telnet_auth':     'Log de Auth',
 
     'th.first_seen':   'Primeira Vez',
     'th.downloads':    'Downloads',
 
-    'card.ov_auth.meta': 'tentativas ssh + http',
+    'card.ov_auth.meta': 'tentativas ssh + telnet',
 
     'chart.by_hour':   'Ataques por Hora do Dia',
     'chart.by_dow':    'Ataques por Dia da Semana',
@@ -339,7 +325,7 @@ function applyLang(lang) {
   });
 
   // Re-render live data with new language (translated DOW labels, empty states, etc.)
-  if (lastData && (!$('page-ssh').hidden || !$('page-http').hidden)) {
+  if (lastData && (!$('page-ssh').hidden || !$('page-telnet').hidden)) {
     destroyCharts();
     renderAll(lastData);
   }
@@ -496,11 +482,11 @@ document.querySelectorAll('.page-tab').forEach(btn => {
     const page = btn.dataset.page;
     $('page-overview').hidden  = page !== 'overview';
     $('page-ssh').hidden       = page !== 'ssh';
-    $('page-http').hidden      = page !== 'http';
+    $('page-telnet').hidden    = page !== 'telnet';
     $('page-wordlists').hidden = page !== 'wordlists';
     $('dashboard-controls').style.display = page === 'wordlists' ? 'none' : 'flex';
     if (page === 'wordlists' && !wordlistsLoaded) loadWordlists();
-    if (page === 'http' || page === 'overview') requestAnimationFrame(() => Object.values(activeCharts).forEach(c => c.resize()));
+    if (page === 'telnet' || page === 'overview') requestAnimationFrame(() => Object.values(activeCharts).forEach(c => c.resize()));
   });
 });
 
@@ -534,12 +520,12 @@ document.querySelectorAll('.log-tab[data-tab]').forEach(btn => {
 async function loadStats() {
   $('loading').hidden          = false;
   $('stats-root').hidden       = true;
-  $('http-loading').hidden     = false;
-  $('http-root').hidden        = true;
+  $('telnet-loading').hidden   = false;
+  $('telnet-root').hidden      = true;
   $('overview-loading').hidden = false;
   $('overview-root').hidden    = true;
   $('loading').innerHTML          = `<div class="spinner"></div><p>${t('loading.stats.spin')}</p>`;
-  $('http-loading').innerHTML     = `<div class="spinner"></div><p>${t('loading.stats.spin')}</p>`;
+  $('telnet-loading').innerHTML   = `<div class="spinner"></div><p>${t('loading.stats.spin')}</p>`;
   $('overview-loading').innerHTML = `<div class="spinner"></div><p>${t('loading.stats.spin')}</p>`;
 
   for (;;) {
@@ -557,8 +543,8 @@ async function loadStats() {
       renderAll(data);
       $('loading').hidden          = true;
       $('stats-root').hidden       = false;
-      $('http-loading').hidden     = true;
-      $('http-root').hidden        = false;
+      $('telnet-loading').hidden   = true;
+      $('telnet-root').hidden      = false;
       $('overview-loading').hidden = true;
       $('overview-root').hidden    = false;
       $('last-updated').textContent = new Date().toLocaleTimeString();
@@ -566,7 +552,7 @@ async function loadStats() {
     } catch (err) {
       const msg = `<p style="color:var(--c-red);font-family:'JetBrains Mono',monospace;text-align:center">ERR: ${esc(err.message)}</p>`;
       $('loading').innerHTML          = msg;
-      $('http-loading').innerHTML     = msg;
+      $('telnet-loading').innerHTML   = msg;
       $('overview-loading').innerHTML = msg;
       return;
     }
@@ -583,13 +569,12 @@ function destroyCharts() {
 function renderAll(d) {
   const { overview } = d;
 
-  // ── Overview combined stats (SSH + HTTP) ────────────────────────────────
-  const wo = (d.web || {}).overview || {};
-  counter($('v-ov-unique-passwords'), (overview.unique_passwords || 0) + (wo.unique_passwords || 0));
-  counter($('v-ov-unique-usernames'), (overview.unique_usernames || 0) + (wo.unique_usernames || 0));
-  counter($('v-ov-unique-ips'),       (overview.unique_ips       || 0) + (wo.unique_ips       || 0));
-  counter($('v-ov-auth'),             (overview.auth_attempts    || 0) + (wo.submissions       || 0));
-  counter($('v-ov-downloads'),         overview.downloads        || 0);
+  // ── Overview (SSH + telnet are already combined in overview.* via cowrie) ──
+  counter($('v-ov-unique-passwords'), overview.unique_passwords || 0);
+  counter($('v-ov-unique-usernames'), overview.unique_usernames || 0);
+  counter($('v-ov-unique-ips'),       overview.unique_ips       || 0);
+  counter($('v-ov-auth'),             overview.auth_attempts    || 0);
+  counter($('v-ov-downloads'),        overview.downloads        || 0);
 
   counter($('v-auth'),             overview.auth_attempts);
   counter($('v-commands'),         overview.commands);
@@ -728,34 +713,35 @@ function renderAll(d) {
      <td class="mono">${fmtTs(r.first_seen)}</td>`
   );
 
-  // ── Web honeypot ──────────────────────────────────────────────────────────
-  const web = d.web || {};
+  // ── Telnet honeypot ───────────────────────────────────────────────────────
+  const telnet = d.telnet || {};
+  const tov    = telnet.overview || {};
 
-  if (wo.visits            != null) counter($('v-web-visits'),            wo.visits);
-  if (wo.unique_ips        != null) counter($('v-web-ips'),               wo.unique_ips);
-  if (wo.submissions       != null) counter($('v-web-submissions'),       wo.submissions);
-  if (wo.unique_paths      != null) counter($('v-web-paths'),             wo.unique_paths);
-  if (wo.unique_uas        != null) counter($('v-web-uas'),               wo.unique_uas);
-  if (wo.unique_passwords  != null) counter($('v-web-unique-passwords'),  wo.unique_passwords);
-  if (wo.unique_usernames  != null) counter($('v-web-unique-usernames'),  wo.unique_usernames);
+  if (tov.connections      != null) counter($('v-telnet-connections'),      tov.connections);
+  if (tov.unique_ips       != null) counter($('v-telnet-ips'),              tov.unique_ips);
+  if (tov.auth_attempts    != null) counter($('v-telnet-auth'),             tov.auth_attempts);
+  if (tov.unique_commands  != null) counter($('v-telnet-commands'),         tov.unique_commands);
+  if (tov.cmd_sessions     != null) counter($('v-telnet-cmd-sessions'),     tov.cmd_sessions);
+  if (tov.unique_passwords != null) counter($('v-telnet-unique-passwords'), tov.unique_passwords);
+  if (tov.unique_usernames != null) counter($('v-telnet-unique-usernames'), tov.unique_usernames);
 
-  if (web.timeseries && web.timeseries.length) {
-    const labels = web.timeseries.map(r => fmtTime(r.t, currentWindow));
-    activeCharts['web-ts'] = new Chart($('chart-web-timeseries'), {
+  if (telnet.timeseries && telnet.timeseries.length) {
+    const labels = telnet.timeseries.map(r => fmtTime(r.t, currentWindow));
+    activeCharts['telnet-ts'] = new Chart($('chart-telnet-timeseries'), {
       type: 'line',
       data: {
         labels,
         datasets: [
           {
-            label: t('legend.visits'),
-            data: web.timeseries.map(r => r.visits),
-            borderColor: GBX.blue, backgroundColor: GBX.blue + '33',
+            label: t('legend.failed'),
+            data: telnet.timeseries.map(r => r.failed),
+            borderColor: GBX.red, backgroundColor: GBX.red + '33',
             fill: true, tension: .35, pointRadius: 0, borderWidth: 2,
           },
           {
-            label: t('legend.submissions'),
-            data: web.timeseries.map(r => r.submissions),
-            borderColor: GBX.red, backgroundColor: GBX.red + '33',
+            label: t('legend.successful'),
+            data: telnet.timeseries.map(r => r.successful),
+            borderColor: GBX.green, backgroundColor: GBX.green + '33',
             fill: true, tension: .35, pointRadius: 0, borderWidth: 2,
           },
         ],
@@ -772,47 +758,40 @@ function renderAll(d) {
     });
   }
 
-  renderHBar('chart-web-paths', (web.top_paths || []).map(r => ({
-    label: r.path, value: Number(r.visits),
+  renderHBar('chart-telnet-commands', (telnet.top_commands || []).map(r => ({
+    label: r.command, value: Number(r.attempts),
   })), 'var(--c-blue)');
 
-  renderHBar('chart-web-ips', (web.top_ips || []).map(r => ({
-    label: r.ip, value: Number(r.visits),
+  renderHBar('chart-telnet-ips', (telnet.top_ips || []).map(r => ({
+    label: r.ip, value: Number(r.connections),
   })), 'var(--c-orange)');
 
-  const webHasCreds = (web.top_usernames && web.top_usernames.length) ||
-                      (web.top_passwords && web.top_passwords.length);
-  $('section-web-creds').hidden = !webHasCreds;
+  const telnetHasCreds = (telnet.top_usernames && telnet.top_usernames.length) ||
+                         (telnet.top_passwords && telnet.top_passwords.length);
+  $('section-telnet-creds').hidden = !telnetHasCreds;
 
-  renderHBar('chart-web-usernames', (web.top_usernames || []).map(r => ({
+  renderHBar('chart-telnet-usernames', (telnet.top_usernames || []).map(r => ({
     label: r.username, value: Number(r.attempts),
   })), 'var(--c-aqua)');
 
-  renderHBar('chart-web-passwords', (web.top_passwords || []).map(r => ({
+  renderHBar('chart-telnet-passwords', (telnet.top_passwords || []).map(r => ({
     label: r.password, value: Number(r.attempts),
   })), 'var(--c-purple)');
 
-  fillTable('tbl-web-uas', web.top_uas || [], r =>
-    `<td class="rank">${r._rank}</td>
-     <td class="mono truncate">${esc(r.user_agent)}</td>
-     <td class="num mono">${r.visits}</td>`
-  );
-
-  fillTable('tbl-web-visits', web.visit_log || [], r =>
+  fillTable('tbl-telnet-sessions', telnet.session_log || [], r =>
     `<td class="mono">${fmtTs(r.time)}</td>
      <td class="mono">${esc(r.ip)}</td>
-     <td class="mono">${esc(r.method)}</td>
-     <td class="mono truncate">${esc(r.path)}</td>
-     <td class="mono truncate">${esc(r.user_agent)}</td>`
+     <td class="mono">${esc(r.session)}</td>
+     <td class="num mono">${r.commands}</td>`
   );
 
-  fillTable('tbl-web-submissions', web.submission_log || [], r => {
-    const fd = r.form_data || {};
-    return `<td class="mono">${fmtTs(r.time)}</td>
+  fillTable('tbl-telnet-auth', telnet.auth_log || [], r =>
+    `<td class="mono">${fmtTs(r.time)}</td>
      <td class="mono">${esc(r.ip)}</td>
-     <td class="mono">${esc(fd.username || '—')}</td>
-     <td class="mono">${esc(fd.password || '—')}</td>`;
-  });
+     <td class="mono">${esc(r.username)}</td>
+     <td class="mono">${esc(r.password)}</td>
+     <td class="mono ${r.success ? 'badge-ok' : 'badge-fail'}">${r.success ? '✓' : '✗'}</td>`
+  );
 
   // ── Geo / ASN ─────────────────────────────────────────────────────────────
   const geo = d.geo || {};

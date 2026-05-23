@@ -70,167 +70,158 @@ def rows(cur):
     return [dict(r) for r in cur.fetchall()]
 
 
-def compute_web(conn, window):
+def compute_telnet(conn, window):
     delta = WINDOWS[window]
     now = datetime.now(timezone.utc)
     since = None if delta is None else now - delta
 
-    vc, vp = cond("v.timestamp", since)
-    fc, fp = cond("f.timestamp", since)
-    bucket = BUCKET[window].format(col="v.timestamp")
+    sc, sp   = cond("s.starttime", since)
+    ac, ap   = cond("a.timestamp", since)
+    ic, ip_  = cond("i.timestamp", since)
+    bucket   = BUCKET[window].format(col="a.timestamp")
+
+    proto = "s.protocol = 'telnet'"
 
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute(f"SELECT count(*) AS v FROM web_visits v WHERE {vc}", vp)
-        web_visits = int(cur.fetchone()["v"])
+        cur.execute(f"SELECT count(*) AS v FROM sessions s WHERE {sc} AND {proto}", sp)
+        connections = int(cur.fetchone()["v"])
 
-        cur.execute(f"SELECT count(DISTINCT v.ip) AS v FROM web_visits v WHERE {vc}", vp)
-        web_unique_ips = int(cur.fetchone()["v"])
-
-        cur.execute(f"SELECT count(*) AS v FROM web_form_submissions f WHERE {fc}", fp)
-        web_submissions = int(cur.fetchone()["v"])
-
-        cur.execute(f"SELECT count(DISTINCT v.path) AS v FROM web_visits v WHERE {vc}", vp)
-        web_unique_paths = int(cur.fetchone()["v"])
-
-        cur.execute(f"SELECT count(DISTINCT v.user_agent) AS v FROM web_visits v WHERE {vc} AND v.user_agent != ''", vp)
-        web_unique_uas = int(cur.fetchone()["v"])
+        cur.execute(f"SELECT count(DISTINCT s.ip) AS v FROM sessions s WHERE {sc} AND {proto}", sp)
+        unique_ips = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT count(DISTINCT f.form_data->>'password') AS v
-            FROM web_form_submissions f WHERE {fc}
-              AND f.form_data->>'password' IS NOT NULL
-              AND f.form_data->>'password' != ''
-        """, fp)
-        web_unique_passwords = int(cur.fetchone()["v"])
+            SELECT count(*) AS v FROM auth a
+            JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+        """, ap)
+        auth_attempts = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT count(DISTINCT f.form_data->>'username') AS v
-            FROM web_form_submissions f WHERE {fc}
-              AND f.form_data->>'username' IS NOT NULL
-              AND f.form_data->>'username' != ''
-        """, fp)
-        web_unique_usernames = int(cur.fetchone()["v"])
+            SELECT count(DISTINCT i.input) AS v FROM input i
+            JOIN sessions s ON i.session = s.id
+            WHERE {ic} AND {proto}
+        """, ip_)
+        unique_commands = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT v.path, count(*) AS visits
-            FROM web_visits v WHERE {vc} AND v.path != '/'
-            GROUP BY v.path ORDER BY visits DESC LIMIT 20
-        """, vp)
-        web_top_paths = rows(cur)
+            SELECT count(DISTINCT i.session) AS v FROM input i
+            JOIN sessions s ON i.session = s.id
+            WHERE {ic} AND {proto}
+        """, ip_)
+        cmd_sessions = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT v.ip, count(*) AS visits
-            FROM web_visits v WHERE {vc}
-            GROUP BY v.ip ORDER BY visits DESC LIMIT 20
-        """, vp)
-        web_top_ips = rows(cur)
+            SELECT count(DISTINCT a.password) AS v FROM auth a
+            JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+        """, ap)
+        unique_passwords = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT v.user_agent, count(*) AS visits
-            FROM web_visits v WHERE {vc} AND v.user_agent != ''
-            GROUP BY v.user_agent ORDER BY visits DESC LIMIT 10
-        """, vp)
-        web_top_uas = rows(cur)
+            SELECT count(DISTINCT a.username) AS v FROM auth a
+            JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+        """, ap)
+        unique_usernames = int(cur.fetchone()["v"])
 
         cur.execute(f"""
-            SELECT v.method, count(*) AS visits
-            FROM web_visits v WHERE {vc}
-            GROUP BY v.method ORDER BY visits DESC
-        """, vp)
-        web_methods = rows(cur)
+            SELECT i.input AS command, count(*) AS attempts FROM input i
+            JOIN sessions s ON i.session = s.id
+            WHERE {ic} AND {proto} AND i.input != ''
+            GROUP BY i.input ORDER BY attempts DESC LIMIT 20
+        """, ip_)
+        top_commands = rows(cur)
 
         cur.execute(f"""
-            SELECT v.referrer, count(*) AS visits
-            FROM web_visits v WHERE {vc} AND v.referrer != ''
-            GROUP BY v.referrer ORDER BY visits DESC LIMIT 15
-        """, vp)
-        web_top_referrers = rows(cur)
+            SELECT s.ip, count(*) AS connections FROM sessions s
+            WHERE {sc} AND {proto}
+            GROUP BY s.ip ORDER BY connections DESC LIMIT 20
+        """, sp)
+        top_ips = rows(cur)
 
         cur.execute(f"""
-            SELECT {bucket} AS t, count(*) AS visits,
-                   count(f.id) AS submissions
-            FROM web_visits v
-            LEFT JOIN web_form_submissions f ON f.visit_id = v.id
-            WHERE {vc}
+            SELECT a.username, count(*) AS attempts FROM auth a
+            JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+            GROUP BY a.username ORDER BY attempts DESC LIMIT 20
+        """, ap)
+        top_usernames = rows(cur)
+
+        cur.execute(f"""
+            SELECT a.password, count(*) AS attempts FROM auth a
+            JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+            GROUP BY a.password ORDER BY attempts DESC LIMIT 20
+        """, ap)
+        top_passwords = rows(cur)
+
+        cur.execute(f"""
+            SELECT {bucket} AS t,
+                   sum(CASE WHEN a.success THEN 1 ELSE 0 END) AS successful,
+                   sum(CASE WHEN NOT a.success THEN 1 ELSE 0 END) AS failed
+            FROM auth a JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
             GROUP BY 1 ORDER BY 1
-        """, vp)
-        web_timeseries = [
-            {"t": r["t"].isoformat(), "visits": int(r["visits"]), "submissions": int(r["submissions"])}
+        """, ap)
+        timeseries = [
+            {"t": r["t"].isoformat(), "successful": int(r["successful"]), "failed": int(r["failed"])}
             for r in cur.fetchall()
         ]
 
         cur.execute(f"""
-            SELECT f.form_data->>'username' AS username, count(*) AS attempts
-            FROM web_form_submissions f WHERE {fc}
-              AND f.form_data->>'username' IS NOT NULL
-              AND f.form_data->>'username' != ''
-            GROUP BY username ORDER BY attempts DESC LIMIT 20
-        """, fp)
-        web_top_usernames = rows(cur)
-
-        cur.execute(f"""
-            SELECT f.form_data->>'password' AS password, count(*) AS attempts
-            FROM web_form_submissions f WHERE {fc}
-              AND f.form_data->>'password' IS NOT NULL
-              AND f.form_data->>'password' != ''
-            GROUP BY password ORDER BY attempts DESC LIMIT 20
-        """, fp)
-        web_top_passwords = rows(cur)
-
-        cur.execute(f"""
-            SELECT v.timestamp AS time, v.ip, v.method, v.path, v.user_agent
-            FROM web_visits v WHERE {vc}
-            ORDER BY v.timestamp DESC LIMIT 100
-        """, vp)
-        web_visit_log = [
+            SELECT s.starttime AS time, s.ip, s.id AS session,
+                   (SELECT count(*) FROM input i WHERE i.session = s.id) AS commands
+            FROM sessions s
+            WHERE {sc} AND {proto}
+            ORDER BY s.starttime DESC LIMIT 100
+        """, sp)
+        session_log = [
             {"time": r["time"].isoformat(), "ip": r["ip"],
-             "method": r["method"], "path": r["path"], "user_agent": r["user_agent"]}
+             "session": r["session"][:8], "commands": int(r["commands"])}
             for r in cur.fetchall()
         ]
 
         cur.execute(f"""
-            SELECT f.timestamp AS time, v.ip, f.form_data
-            FROM web_form_submissions f JOIN web_visits v ON f.visit_id = v.id
-            WHERE {fc}
-            ORDER BY f.timestamp DESC LIMIT 50
-        """, fp)
-        web_submission_log = [
-            {"time": r["time"].isoformat(), "ip": r["ip"], "form_data": r["form_data"]}
+            SELECT a.timestamp AS time, s.ip, a.username, a.password, a.success
+            FROM auth a JOIN sessions s ON a.session = s.id
+            WHERE {ac} AND {proto}
+            ORDER BY a.timestamp DESC LIMIT 100
+        """, ap)
+        auth_log = [
+            {"time": r["time"].isoformat(), "ip": r["ip"],
+             "username": r["username"], "password": r["password"],
+             "success": r["success"]}
             for r in cur.fetchall()
         ]
 
     return {
         "overview": {
-            "visits":            web_visits,
-            "unique_ips":        web_unique_ips,
-            "submissions":       web_submissions,
-            "unique_paths":      web_unique_paths,
-            "unique_uas":        web_unique_uas,
-            "unique_passwords":  web_unique_passwords,
-            "unique_usernames":  web_unique_usernames,
+            "connections":      connections,
+            "unique_ips":       unique_ips,
+            "auth_attempts":    auth_attempts,
+            "unique_commands":  unique_commands,
+            "cmd_sessions":     cmd_sessions,
+            "unique_passwords": unique_passwords,
+            "unique_usernames": unique_usernames,
         },
-        "top_paths":       web_top_paths,
-        "top_ips":         web_top_ips,
-        "top_uas":         web_top_uas,
-        "methods":         web_methods,
-        "top_referrers":   web_top_referrers,
-        "timeseries":      web_timeseries,
-        "top_usernames":   web_top_usernames,
-        "top_passwords":   web_top_passwords,
-        "visit_log":       web_visit_log,
-        "submission_log":  web_submission_log,
+        "timeseries":    timeseries,
+        "top_commands":  top_commands,
+        "top_ips":       top_ips,
+        "top_usernames": top_usernames,
+        "top_passwords": top_passwords,
+        "session_log":   session_log,
+        "auth_log":      auth_log,
     }
 
 
-def _safe_compute_web(conn, window):
+def _safe_compute_telnet(conn, window):
     try:
-        return compute_web(conn, window)
+        return compute_telnet(conn, window)
     except Exception as e:
-        print(f"WARNING: web stats skipped: {e}", file=sys.stderr)
-        return {"overview": {}, "top_paths": [], "top_ips": [], "top_uas": [],
-                "methods": [], "top_referrers": [], "timeseries": [],
+        print(f"WARNING: telnet stats skipped: {e}", file=sys.stderr)
+        return {"overview": {}, "timeseries": [], "top_commands": [], "top_ips": [],
                 "top_usernames": [], "top_passwords": [],
-                "visit_log": [], "submission_log": []}
+                "session_log": [], "auth_log": []}
 
 def load_geo_readers():
     if not _MAXMINDDB_AVAILABLE:
@@ -831,7 +822,7 @@ def compute(conn, window, campaigns):
         "auth_log":             auth_log,
         "dl_log":               dl_log,
         "malware_hashes_detail": malware_hashes_detail,
-        "web":       _safe_compute_web(conn, window),
+        "telnet":    _safe_compute_telnet(conn, window),
         "geo":       _safe_compute_geo(conn, window),
         "campaigns": campaigns if window in ("6h", "24h", "7d") else [],
     }

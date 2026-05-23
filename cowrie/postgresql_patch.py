@@ -80,8 +80,8 @@ class Output(cowrie.core.output.Output):
                 )
                 sensorid = int(r[0][0])
             self.simpleQuery(
-                "INSERT INTO sessions (id, starttime, sensor, ip) VALUES (%s, TO_TIMESTAMP(%s), %s, %s)",
-                (event["session"], event["time"], sensorid, event["src_ip"]),
+                "INSERT INTO sessions (id, starttime, sensor, ip, protocol) VALUES (%s, TO_TIMESTAMP(%s), %s, %s, %s)",
+                (event["session"], event["time"], sensorid, event["src_ip"], event.get("protocol", "ssh")),
             )
 
         elif event["eventid"] == "cowrie.login.success":

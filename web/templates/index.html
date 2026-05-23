@@ -69,7 +69,7 @@
       <nav class="page-nav">
         <button class="page-tab active" data-page="overview">Overview</button>
         <button class="page-tab" data-page="ssh">SSH</button>
-        <button class="page-tab" data-page="http">HTTP</button>
+        <button class="page-tab" data-page="telnet">Telnet</button>
         <button class="page-tab" data-page="wordlists" data-i18n="nav.wordlists">Wordlists</button>
       </nav>
     </div>
@@ -159,7 +159,7 @@
                 </div>
                 <p class="card-label" data-i18n="card.auth">Auth Attempts</p>
                 <p class="card-value" id="v-ov-auth">—</p>
-                <p class="card-meta" data-i18n="card.ov_auth.meta">ssh + http login attempts</p>
+                <p class="card-meta" data-i18n="card.ov_auth.meta">ssh + telnet login attempts</p>
               </div>
 
               <div class="stat-card">
@@ -465,64 +465,64 @@
       </div><!-- /stats-root -->
     </div><!-- /page-ssh -->
 
-    <!-- ═══ HTTP PAGE ════════════════════════════════════════════════════ -->
-    <div id="page-http" hidden>
+    <!-- ═══ TELNET PAGE ══════════════════════════════════════════════════ -->
+    <div id="page-telnet" hidden>
 
-      <div id="http-loading" class="loading-state" hidden>
+      <div id="telnet-loading" class="loading-state" hidden>
         <div class="spinner"></div>
         <p data-i18n="loading.stats">Loading statistics…</p>
       </div>
 
-      <div id="http-root" hidden>
+      <div id="telnet-root" hidden>
 
-          <!-- ── HTTP Honeypot overview ── -->
+          <!-- ── Telnet overview ── -->
           <section class="section">
-            <h2 class="section-heading" data-i18n="section.web">HTTP Honeypot</h2>
+            <h2 class="section-heading" data-i18n="section.telnet">Telnet Honeypot</h2>
             <div class="cards-grid">
 
               <div class="stat-card">
                 <div class="card-glyph" style="--clr:var(--c-blue)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
                 </div>
-                <p class="card-label" data-i18n="card.web_visits">HTTP Visits</p>
-                <p class="card-value" id="v-web-visits">—</p>
-                <p class="card-meta" data-i18n="card.web_visits.meta">total HTTP requests logged</p>
+                <p class="card-label" data-i18n="card.telnet_connections">Connections</p>
+                <p class="card-value" id="v-telnet-connections">—</p>
+                <p class="card-meta" data-i18n="card.telnet_connections.meta">total telnet sessions</p>
               </div>
 
               <div class="stat-card">
                 <div class="card-glyph" style="--clr:var(--c-orange)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
                 </div>
-                <p class="card-label" data-i18n="card.web_ips">Unique IPs</p>
-                <p class="card-value" id="v-web-ips">—</p>
-                <p class="card-meta" data-i18n="card.web_ips.meta">distinct web attacker IPs</p>
+                <p class="card-label" data-i18n="card.telnet_ips">Unique IPs</p>
+                <p class="card-value" id="v-telnet-ips">—</p>
+                <p class="card-meta" data-i18n="card.telnet_ips.meta">distinct telnet attacker IPs</p>
               </div>
 
               <div class="stat-card">
                 <div class="card-glyph" style="--clr:var(--c-red)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                 </div>
-                <p class="card-label" data-i18n="card.web_submissions">Login Attempts</p>
-                <p class="card-value" id="v-web-submissions">—</p>
-                <p class="card-meta" data-i18n="card.web_submissions.meta">form submissions captured</p>
+                <p class="card-label" data-i18n="card.telnet_auth">Auth Attempts</p>
+                <p class="card-value" id="v-telnet-auth">—</p>
+                <p class="card-meta" data-i18n="card.telnet_auth.meta">telnet login attempts</p>
               </div>
 
               <div class="stat-card">
                 <div class="card-glyph" style="--clr:var(--c-yellow)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
                 </div>
-                <p class="card-label" data-i18n="card.web_paths">Unique Paths</p>
-                <p class="card-value" id="v-web-paths">—</p>
-                <p class="card-meta" data-i18n="card.web_paths.meta">distinct URLs probed</p>
+                <p class="card-label" data-i18n="card.telnet_commands">Unique Commands</p>
+                <p class="card-value" id="v-telnet-commands">—</p>
+                <p class="card-meta" data-i18n="card.telnet_commands.meta">distinct shell inputs</p>
               </div>
 
               <div class="stat-card">
                 <div class="card-glyph" style="--clr:var(--c-aqua)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                 </div>
-                <p class="card-label" data-i18n="card.web_uas">Unique User Agents</p>
-                <p class="card-value" id="v-web-uas">—</p>
-                <p class="card-meta" data-i18n="card.web_uas.meta">distinct HTTP clients seen</p>
+                <p class="card-label" data-i18n="card.telnet_cmd_sessions">Sessions w/ Input</p>
+                <p class="card-value" id="v-telnet-cmd-sessions">—</p>
+                <p class="card-meta" data-i18n="card.telnet_cmd_sessions.meta">sessions that ran commands</p>
               </div>
 
               <div class="stat-card">
@@ -530,7 +530,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M12 11l9-9"/><path d="M17 6l2 2"/><path d="M21 2l0 4"/></svg>
                 </div>
                 <p class="card-label" data-i18n="card.unique_passwords">Unique Passwords</p>
-                <p class="card-value" id="v-web-unique-passwords">—</p>
+                <p class="card-value" id="v-telnet-unique-passwords">—</p>
                 <p class="card-meta" data-i18n="card.unique_passwords.meta">distinct passwords collected</p>
               </div>
 
@@ -539,108 +539,93 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <p class="card-label" data-i18n="card.unique_usernames">Unique Usernames</p>
-                <p class="card-value" id="v-web-unique-usernames">—</p>
+                <p class="card-value" id="v-telnet-unique-usernames">—</p>
                 <p class="card-meta" data-i18n="card.unique_usernames.meta">distinct usernames collected</p>
               </div>
 
             </div>
           </section>
 
-          <!-- ── Web timeseries ── -->
+          <!-- ── Telnet timeseries ── -->
           <section class="section">
-            <h2 class="section-heading" data-i18n="section.web_timeseries">HTTP Traffic Over Time</h2>
+            <h2 class="section-heading" data-i18n="section.telnet_timeseries">Telnet Auth Over Time</h2>
             <div class="chart-card">
               <div class="chart-body" style="height:180px">
-                <canvas id="chart-web-timeseries"></canvas>
+                <canvas id="chart-telnet-timeseries"></canvas>
               </div>
               <div class="legend-row" style="margin-top:10px">
                 <span class="legend-item">
-                  <span class="legend-dot" style="background:var(--c-blue)"></span>
-                  <span data-i18n="legend.visits">Visits</span>
+                  <span class="legend-dot" style="background:var(--c-red)"></span>
+                  <span data-i18n="legend.failed">Failed</span>
                 </span>
                 <span class="legend-item">
-                  <span class="legend-dot" style="background:var(--c-red)"></span>
-                  <span data-i18n="legend.submissions">Login Attempts</span>
+                  <span class="legend-dot" style="background:var(--c-green)"></span>
+                  <span data-i18n="legend.successful">Successful</span>
                 </span>
               </div>
             </div>
           </section>
 
-          <!-- ── Web top paths + IPs ── -->
+          <!-- ── Top commands + IPs ── -->
           <section class="section">
             <div class="charts-row">
               <div class="chart-card">
-                <h3 class="chart-title" data-i18n="chart.web_paths">Top Requested Paths</h3>
-                <div class="chart-body"><div id="chart-web-paths"></div></div>
+                <h3 class="chart-title" data-i18n="chart.telnet_commands">Top Commands</h3>
+                <div class="chart-body"><div id="chart-telnet-commands"></div></div>
               </div>
               <div class="chart-card">
-                <h3 class="chart-title" data-i18n="chart.web_ips">Top Source IPs</h3>
-                <div class="chart-body"><div id="chart-web-ips"></div></div>
+                <h3 class="chart-title" data-i18n="chart.telnet_ips">Top Source IPs</h3>
+                <div class="chart-body"><div id="chart-telnet-ips"></div></div>
               </div>
             </div>
           </section>
 
-          <!-- ── Web form credentials ── -->
-          <section class="section" id="section-web-creds">
-            <h2 class="section-heading" data-i18n="section.web_creds">Form Submission Credentials</h2>
+          <!-- ── Telnet credentials ── -->
+          <section class="section" id="section-telnet-creds">
+            <h2 class="section-heading" data-i18n="section.telnet_creds">Telnet Credentials</h2>
             <div class="charts-row">
               <div class="chart-card">
-                <h3 class="chart-title" data-i18n="chart.web_usernames">Usernames</h3>
-                <div class="chart-body"><div id="chart-web-usernames"></div></div>
+                <h3 class="chart-title" data-i18n="chart.telnet_usernames">Usernames</h3>
+                <div class="chart-body"><div id="chart-telnet-usernames"></div></div>
               </div>
               <div class="chart-card">
-                <h3 class="chart-title" data-i18n="chart.web_passwords">Passwords</h3>
-                <div class="chart-body"><div id="chart-web-passwords"></div></div>
+                <h3 class="chart-title" data-i18n="chart.telnet_passwords">Passwords</h3>
+                <div class="chart-body"><div id="chart-telnet-passwords"></div></div>
               </div>
             </div>
           </section>
 
-          <!-- ── Web user agents ── -->
-          <section class="section">
-            <h2 class="section-heading" data-i18n="section.web_uas">HTTP User Agents</h2>
-            <div class="tbl-wrap">
-              <table class="data-tbl" id="tbl-web-uas">
-                <thead><tr>
-                  <th data-i18n="th.rank">#</th>
-                  <th data-i18n="th.user_agent">User Agent</th>
-                  <th data-i18n="th.visits">Visits</th>
-                </tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- ── HTTP activity logs ── -->
+          <!-- ── Telnet activity logs ── -->
           <section class="section">
             <h2 class="section-heading" data-i18n="section.logs">Activity Logs</h2>
             <div class="tabs-bar">
-              <button class="log-tab active" data-tab="web-visits" data-i18n="tab.web_visits">HTTP Visits</button>
-              <button class="log-tab" data-tab="web-submissions" data-i18n="tab.web_submissions">Form Submissions</button>
+              <button class="log-tab active" data-tab="telnet-sessions" data-i18n="tab.telnet_sessions">Sessions</button>
+              <button class="log-tab" data-tab="telnet-auth" data-i18n="tab.telnet_auth">Auth Log</button>
             </div>
 
-            <div id="tab-web-visits" class="log-panel">
+            <div id="tab-telnet-sessions" class="log-panel">
               <div class="tbl-wrap log-wrap">
-                <table class="data-tbl log-tbl" id="tbl-web-visits">
+                <table class="data-tbl log-tbl" id="tbl-telnet-sessions">
                   <thead><tr>
                     <th data-i18n="th.time">Time</th>
                     <th data-i18n="th.ip">IP</th>
-                    <th data-i18n="th.method">Method</th>
-                    <th data-i18n="th.path">Path</th>
-                    <th data-i18n="th.user_agent">User Agent</th>
+                    <th data-i18n="th.session">Session</th>
+                    <th data-i18n="th.commands">Commands</th>
                   </tr></thead>
                   <tbody></tbody>
                 </table>
               </div>
             </div>
 
-            <div id="tab-web-submissions" class="log-panel" hidden>
+            <div id="tab-telnet-auth" class="log-panel" hidden>
               <div class="tbl-wrap log-wrap">
-                <table class="data-tbl log-tbl" id="tbl-web-submissions">
+                <table class="data-tbl log-tbl" id="tbl-telnet-auth">
                   <thead><tr>
                     <th data-i18n="th.time">Time</th>
                     <th data-i18n="th.ip">IP</th>
                     <th data-i18n="th.username">Username</th>
                     <th data-i18n="th.password">Password</th>
+                    <th data-i18n="th.ok">OK</th>
                   </tr></thead>
                   <tbody></tbody>
                 </table>
@@ -648,8 +633,8 @@
             </div>
           </section>
 
-      </div><!-- /http-root -->
-    </div><!-- /page-http -->
+      </div><!-- /telnet-root -->
+    </div><!-- /page-telnet -->
 
     <!-- ═══ WORDLISTS PAGE ══════════════════════════════════════════════ -->
     <div id="page-wordlists" hidden>

@@ -19,8 +19,12 @@ CREATE TABLE IF NOT EXISTS sessions (
     sensor INTEGER REFERENCES sensors(id),
     ip VARCHAR(45),
     termsize VARCHAR(7) DEFAULT '',
-    client INTEGER REFERENCES clients(id)
+    client INTEGER REFERENCES clients(id),
+    protocol VARCHAR(8) DEFAULT 'ssh'
 );
+
+-- Existing schemas pre-date the protocol column; backfill assumes legacy SSH-only data.
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS protocol VARCHAR(8) DEFAULT 'ssh';
 
 CREATE TABLE IF NOT EXISTS auth (
     id SERIAL PRIMARY KEY,
@@ -62,26 +66,8 @@ CREATE TABLE IF NOT EXISTS keyfingerprints (
     fingerprint VARCHAR(100)
 );
 
--- ── Web honeypot ──────────────────────────────────────────────────────────────
-
-CREATE TABLE IF NOT EXISTS web_visits (
-    id SERIAL PRIMARY KEY,
-    ip VARCHAR(45),
-    "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    method VARCHAR(10),
-    path TEXT,
-    query_string TEXT,
-    user_agent TEXT,
-    referrer TEXT,
-    headers JSONB
-);
-
-CREATE TABLE IF NOT EXISTS web_form_submissions (
-    id SERIAL PRIMARY KEY,
-    visit_id INTEGER REFERENCES web_visits(id),
-    "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    form_data JSONB
-);
+DROP TABLE IF EXISTS web_form_submissions;
+DROP TABLE IF EXISTS web_visits;
 
 -- ── Geo/ASN enrichment ────────────────────────────────────────────────────────
 
@@ -110,4 +96,5 @@ CREATE TABLE IF NOT EXISTS campaign_events (
     CONSTRAINT campaign_events_onset_unique UNIQUE (onset_time)
 );
 
-CREATE INDEX IF NOT EXISTS sessions_ip_idx ON sessions (ip);
+CREATE INDEX IF NOT EXISTS sessions_ip_idx       ON sessions (ip);
+CREATE INDEX IF NOT EXISTS sessions_protocol_idx ON sessions (protocol);
