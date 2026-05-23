@@ -38,6 +38,16 @@ const STRINGS = {
     'th.asn_org':           'Organization',
     'campaign.pattern.novel':       'Novel credentials — possible new tool',
     'campaign.pattern.established': 'Established credentials — known botnet',
+    'campaign.act.creds':       'View Credentials',
+    'campaign.act.asns':        'View ASN Sources',
+    'campaign.act.copy':        'Copy user:pass',
+    'campaign.act.copied':      'Copied ✓',
+    'campaign.act.copy_fail':   'Copy failed',
+    'campaign.detail.creds':    'Credentials driving this campaign',
+    'campaign.detail.asns':     'ASN sources driving this campaign',
+    'campaign.novel.yes':       'novel',
+    'campaign.novel.no':        'seen before',
+    'th.novel':                 'Novel?',
 
     'section.overview':        'Overview',
     'section.timeseries':      'Login Attempts Over Time',
@@ -183,6 +193,16 @@ const STRINGS = {
     'th.asn_org':           'Organização',
     'campaign.pattern.novel':       'Credenciais novas — possível nova ferramenta',
     'campaign.pattern.established': 'Credenciais conhecidas — botnet estabelecido',
+    'campaign.act.creds':       'Ver Credenciais',
+    'campaign.act.asns':        'Ver Origens ASN',
+    'campaign.act.copy':        'Copiar user:pass',
+    'campaign.act.copied':      'Copiado ✓',
+    'campaign.act.copy_fail':   'Falha ao copiar',
+    'campaign.detail.creds':    'Credenciais por trás desta campanha',
+    'campaign.detail.asns':     'Origens ASN por trás desta campanha',
+    'campaign.novel.yes':       'nova',
+    'campaign.novel.no':        'já vista',
+    'th.novel':                 'Nova?',
 
     'section.overview':        'Visão Geral',
     'section.timeseries':      'Tentativas de Login ao Longo do Tempo',
@@ -829,15 +849,26 @@ function renderAll(d) {
     $('campaign-alerts-list').innerHTML = campaigns.map(c => {
       const isNovel      = c.credential_pattern === 'novel';
       const patternLabel = t(isNovel ? 'campaign.pattern.novel' : 'campaign.pattern.established');
+
       const asnRows = (c.new_asns || []).map(a =>
         `<tr>
-          <td class="mono">AS${a.asn}</td>
+          <td class="mono"><a href="https://bgp.he.net/AS${a.asn}" target="_blank" rel="noopener">AS${a.asn}</a></td>
           <td class="mono truncate">${esc(a.asn_org || '—')}</td>
           <td class="num mono">${Number(a.attempts).toLocaleString()}</td>
         </tr>`
       ).join('');
+
+      const pairRows = (c.top_pairs || []).map(p =>
+        `<tr>
+          <td class="mono">${esc(p.username)}</td>
+          <td class="mono">${esc(p.password)}</td>
+          <td class="num mono">${Number(p.attempts).toLocaleString()}</td>
+          <td class="mono ${p.novel ? 'badge-ok' : 'badge-fail'}">${p.novel ? t('campaign.novel.yes') : t('campaign.novel.no')}</td>
+        </tr>`
+      ).join('');
+
       return `
-        <div class="campaign-card">
+        <div class="campaign-card" data-campaign-id="${c.id}">
           <div class="campaign-header">
             <span class="campaign-label">CAMPAIGN #${c.id}</span>
             <span class="campaign-badge ${isNovel ? 'badge-campaign-novel' : 'badge-campaign-established'}">${esc(patternLabel)}</span>
@@ -868,13 +899,81 @@ function renderAll(d) {
               <span class="campaign-stat-val mono">${Math.round(c.spike_ratio * 100)}%</span>
             </div>
           </div>
-          ${asnRows ? `<table class="data-tbl" style="margin-top:10px">
-            <thead><tr><th>ASN</th><th data-i18n="th.asn_org">Organization</th><th data-i18n="th.attempts">Attempts</th></tr></thead>
-            <tbody>${asnRows}</tbody>
-          </table>` : ''}
+
+          <div class="campaign-actions">
+            ${pairRows ? `<button class="campaign-action-btn" data-act="creds">${t('campaign.act.creds')}</button>` : ''}
+            ${asnRows ? `<button class="campaign-action-btn" data-act="asns">${t('campaign.act.asns')}</button>` : ''}
+            ${pairRows ? `<button class="campaign-action-btn" data-act="copy">${t('campaign.act.copy')}</button>` : ''}
+          </div>
+
+          ${pairRows ? `
+          <div class="campaign-detail" data-detail="creds">
+            <h4 class="campaign-detail-title">${t('campaign.detail.creds')}</h4>
+            <table class="data-tbl">
+              <thead><tr>
+                <th data-i18n="th.username">Username</th>
+                <th data-i18n="th.password">Password</th>
+                <th data-i18n="th.attempts">Attempts</th>
+                <th>${t('th.novel')}</th>
+              </tr></thead>
+              <tbody>${pairRows}</tbody>
+            </table>
+          </div>` : ''}
+
+          ${asnRows ? `
+          <div class="campaign-detail" data-detail="asns">
+            <h4 class="campaign-detail-title">${t('campaign.detail.asns')}</h4>
+            <table class="data-tbl">
+              <thead><tr>
+                <th>ASN</th>
+                <th data-i18n="th.asn_org">Organization</th>
+                <th data-i18n="th.attempts">Attempts</th>
+              </tr></thead>
+              <tbody>${asnRows}</tbody>
+            </table>
+          </div>` : ''}
         </div>`;
     }).join('');
+
+    bindCampaignActions(campaigns);
   }
+}
+
+function bindCampaignActions(campaigns) {
+  const byId = {};
+  campaigns.forEach(c => { byId[c.id] = c; });
+
+  document.querySelectorAll('.campaign-card').forEach(card => {
+    const id = Number(card.dataset.campaignId);
+    const c  = byId[id];
+
+    const details = card.querySelectorAll('.campaign-detail');
+    const buttons = card.querySelectorAll('.campaign-action-btn[data-act]');
+
+    const showOnly = which => {
+      details.forEach(d => d.hidden = d.dataset.detail !== which);
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.act === which));
+    };
+
+    const firstWithData = card.querySelector('.campaign-detail');
+    if (firstWithData) showOnly(firstWithData.dataset.detail);
+
+    card.querySelector('[data-act="creds"]')?.addEventListener('click', () => showOnly('creds'));
+    card.querySelector('[data-act="asns"]') ?.addEventListener('click', () => showOnly('asns'));
+
+    const copyBtn = card.querySelector('[data-act="copy"]');
+    copyBtn?.addEventListener('click', async () => {
+      const lines = (c.top_pairs || []).map(p => `${p.username}:${p.password}`).join('\n');
+      try {
+        await navigator.clipboard.writeText(lines);
+        copyBtn.textContent = t('campaign.act.copied');
+        setTimeout(() => { copyBtn.textContent = t('campaign.act.copy'); }, 1500);
+      } catch {
+        copyBtn.textContent = t('campaign.act.copy_fail');
+        setTimeout(() => { copyBtn.textContent = t('campaign.act.copy'); }, 1500);
+      }
+    });
+  });
 }
 
 // ── Wordlists ─────────────────────────────────────────────────────────────

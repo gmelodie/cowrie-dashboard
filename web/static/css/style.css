@@ -747,6 +747,46 @@ body { min-height: 100vh; overflow-x: hidden; }
 .campaign-stat-val {
   font-size: .82rem; font-weight: 600;
 }
+.campaign-actions {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 10px 0 6px;
+  padding-top: 10px; border-top: 1px dashed var(--border);
+}
+.campaign-action-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .68rem;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.campaign-action-btn:hover {
+  background: var(--bg-alt);
+  border-color: var(--c-red);
+}
+.campaign-action-btn.active {
+  background: var(--c-red); color: var(--bg);
+  border-color: var(--c-red);
+}
+.campaign-detail {
+  margin-top: 8px;
+}
+.campaign-detail-title {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--fg-dim);
+  font-family: 'JetBrains Mono', monospace;
+  margin: 6px 0;
+}
+.campaign-detail a {
+  color: var(--c-aqua);
+  text-decoration: none;
+}
+.campaign-detail a:hover { text-decoration: underline; }
 
 /* ── Footer ──────────────────────────────────────────────────────────── */
 .footer {
