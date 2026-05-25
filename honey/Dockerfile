@@ -4,8 +4,7 @@
 # across source changes. First-time build: ~8-10 min. Subsequent source-only
 # rebuilds: ~15-30 s.
 
-FROM rust:1.95-bookworm AS chef
-RUN cargo install cargo-chef --locked --version ^0.1
+FROM lukemathwalker/cargo-chef:latest-rust-1.95-bookworm AS chef
 WORKDIR /build
 
 # ── recipe planner ────────────────────────────────────────────────────────────
@@ -23,7 +22,7 @@ FROM chef AS deps
 COPY --from=planner /build/recipe.json recipe.json
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
-    cargo chef cook --release --recipe-path recipe.json
+    cargo chef cook --release --bin honey --recipe-path recipe.json
 
 # ── final binary ──────────────────────────────────────────────────────────────
 FROM deps AS builder

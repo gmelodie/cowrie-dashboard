@@ -39,22 +39,11 @@ Open a new terminal and confirm login on the new port before continuing.
 ### 3. Configure .env
 
 ```bash
-cp .env.example .env
+cp env.example .env
 nano .env
 ```
 
-```env
-POSTGRES_HOST=127.0.0.1
-POSTGRES_PORT=5432
-POSTGRES_DB=cowrie
-POSTGRES_USER=cowrie
-POSTGRES_PASSWORD=strong-password-here
-
-TARGET_HOST=honey.example.com
-
-RECAPTCHA_SITE_KEY=
-RECAPTCHA_SECRET_KEY=
-```
+`env.example` is grouped by concern (Postgres, reCAPTCHA, federation, admin auth, etc.) with inline comments. At minimum set a strong `POSTGRES_PASSWORD`, your `TARGET_HOST`, and reCAPTCHA keys.
 
 Get reCAPTCHA keys at [google.com/recaptcha/admin](https://www.google.com/recaptcha/admin) — add your domain, choose v2 Checkbox, paste both keys. Leave blank to disable the gate.
 
@@ -122,7 +111,7 @@ docker compose run --rm \
 
 ## Federation
 
-Two honeypots can mutually peer to share wordlist observations.
+Two honeypots can mutually peer to share wordlist observations and aggregate stats (top usernames/passwords, country breakdowns, command frequencies).
 
 - **Admin panel:** `https://<host>/admin/` — basic-auth gated, shows pending requests, peers, and federated entries.
 - **CLI:** `docker compose exec honey-federation honey federation peers …` (request, list, pending, approve, reject, revoke).
@@ -163,6 +152,8 @@ All env vars live in `.env`; the relevant ones are:
 | `HONEY_MAX_SKEW_SECS` | `300` | Max accepted clock skew for signed envelopes |
 | `HONEY_ADMIN_USER` | — | nginx basic-auth username for `/admin/` |
 | `HONEY_ADMIN_PASSWORD_HASH` | — | htpasswd-format hash (use `openssl passwd -apr1`) |
+| `VIRUSTOTAL_API_KEY` | — | Optional; enriches downloaded-malware analysis (MalwareBazaar is always queried) |
+| `CERTBOT_EMAIL` | — | Used by `honey ops letsencrypt` for cert issuance |
 | `RUST_LOG` | `info` | tracing-subscriber filter, e.g. `honey_server=debug` |
 
 ---
