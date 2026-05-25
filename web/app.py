@@ -7,6 +7,10 @@ from flask import Flask, render_template, request, jsonify, Response, redirect, 
 from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
+# Used to sign the admin session cookie. Falls back to an ephemeral key if
+# HONEY_SECRET_KEY isn't set — sessions then reset on every restart, which is
+# fine for a single-admin deploy but means you'll be logged out after a redeploy.
+app.secret_key = os.environ.get("HONEY_SECRET_KEY") or os.urandom(32)
 
 # Federation admin panel (mounted at /admin/).
 from admin import bp as admin_bp  # noqa: E402

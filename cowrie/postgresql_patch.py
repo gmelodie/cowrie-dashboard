@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from psycopg2 import OperationalError
+from psycopg2 import InterfaceError, OperationalError
 from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log
@@ -12,6 +12,11 @@ from cowrie.core.config import CowrieConfig
 class ReconnectingPostgreSQLConnectionPool(adbapi.ConnectionPool):
     def _runInteraction(self, interaction, *args, **kw):
         try:
+            return super()._runInteraction(interaction, *args, **kw)
+        except InterfaceError as e:
+            log.msg(f"output_postgresql: connection closed ({e!r}), reconnecting and retrying")
+            conn = self.connections.get(self.threadID())
+            self.disconnect(conn)
             return super()._runInteraction(interaction, *args, **kw)
         except OperationalError as e:
             transient_errors = (

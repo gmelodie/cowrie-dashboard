@@ -154,6 +154,20 @@ body { min-height: 100vh; overflow-x: hidden; }
 .btn-enter svg { width: 15px; height: 15px; transition: transform .2s; }
 .btn-enter:hover:not(:disabled) svg { transform: translateX(4px); }
 .btn-enter:disabled { opacity: .25; cursor: not-allowed; }
+
+.gate-admin-link {
+  display: block;
+  text-align: center;
+  margin-top: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: var(--fg-dim);
+  text-decoration: none;
+  letter-spacing: .08em;
+  transition: color .15s;
+}
+.gate-admin-link:hover { color: var(--c-green); }
+
 .gate-error {
   margin-top: 10px; font-size: .75rem;
   color: var(--c-red); font-family: 'JetBrains Mono', monospace;

@@ -1,34 +1,46 @@
 {% extends "admin/_layout.html" %}
+{% set active_page = 'pending' %}
 {% block content %}
 <section class="admin-card">
-  <h2>Pending requests ({{ pending|length }})</h2>
+  <h2><span data-i18n="a.pending">Pending requests</span> <span class="admin-count">{{ pending|length }}</span></h2>
   {% if pending %}
     {% for p in pending %}
     <div class="admin-pending">
       <div class="admin-fp-block">
-        <span class="admin-fp-label">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
+        <span class="admin-fp-label" data-i18n="a.pending.fp">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
         <code class="admin-fp">{{ p.fingerprint }}</code>
       </div>
       <dl class="admin-meta">
-        <dt>Node</dt><dd>{{ p.node_name or '—' }}</dd>
-        <dt>Contact</dt><dd>{{ p.contact or '—' }}</dd>
-        <dt>URL</dt><dd>{{ p.url }}</dd>
-        {% if p.description %}<dt>Notes</dt><dd>{{ p.description }}</dd>{% endif %}
-        <dt>Received</dt><dd>{{ p.received_at }}</dd>
+        <dt data-i18n="a.pending.node">Node</dt><dd>{{ p.node_name or '—' }}</dd>
+        <dt data-i18n="a.pending.contact">Contact</dt><dd>{{ p.contact or '—' }}</dd>
+        <dt data-i18n="a.pending.url">URL</dt><dd>{{ p.url }}</dd>
+        {% if p.description %}<dt data-i18n="a.pending.notes">Notes</dt><dd>{{ p.description }}</dd>{% endif %}
+        <dt data-i18n="a.pending.received">Received</dt><dd>{{ p.received_at }}</dd>
       </dl>
       <div class="admin-actions">
-        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}">
-          <button class="admin-btn admin-btn-primary"
-                  onclick="return confirm('Did you verify the fingerprint out-of-band?\n\n{{ p.fingerprint }}')">approve</button>
+        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}"
+              data-confirm-key="a.confirm.approve" data-confirm-fp="{{ p.fingerprint }}">
+          <button class="admin-btn admin-btn-primary" data-i18n="a.btn.approve">approve</button>
         </form>
         <form method="post" action="{{ url_for('admin.reject', fp=p.fingerprint) }}">
-          <button class="admin-btn admin-btn-warn">reject</button>
+          <button class="admin-btn admin-btn-warn" data-i18n="a.btn.reject">reject</button>
         </form>
       </div>
     </div>
     {% endfor %}
   {% else %}
-    <p class="admin-empty">No pending requests.</p>
+    <p class="admin-empty" data-i18n="a.pending.empty">No pending requests.</p>
   {% endif %}
 </section>
+
+<script>
+  document.querySelectorAll('form[data-confirm-key]').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      var key = f.dataset.confirmKey;
+      var fp = f.dataset.confirmFp || '';
+      var msg = (window.adminT ? window.adminT(key) : key) + (fp ? '\n\n' + fp : '');
+      if (!window.confirm(msg)) e.preventDefault();
+    });
+  });
+</script>
 {% endblock %}

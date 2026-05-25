@@ -4,23 +4,99 @@ Lives in the existing Flask app under `/admin/`. Reads federation_* tables
 directly; for sign-and-send actions (peer request, pull-now) it proxies to
 the Rust daemon over loopback at HONEY_DAEMON_INTERNAL_URL.
 
-Auth is enforced at nginx (HTTP basic). This module assumes anyone reaching
-it has already cleared that gate.
+Auth is enforced here via a session cookie. Credentials are checked against
+HONEY_ADMIN_USER + HONEY_ADMIN_PASSWORD_HASH (same htpasswd-style hash the
+nginx variant used).
 """
 
 from __future__ import annotations
 
+import base64
+import json
 import os
 import psycopg2
 import psycopg2.extras
 import requests
 from datetime import datetime, timezone
-from flask import Blueprint, abort, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint, abort, jsonify, redirect, render_template, request,
+    session, url_for,
+)
+from passlib.hash import apr_md5_crypt
+
+IDENTITY_PREFIX = "honey1:"
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 DAEMON_INTERNAL_URL = os.environ.get("HONEY_DAEMON_INTERNAL_URL", "http://127.0.0.1:8088")
 DAEMON_TIMEOUT_S = 15
+
+ADMIN_USER = os.environ.get("HONEY_ADMIN_USER", "").strip()
+ADMIN_HASH = os.environ.get("HONEY_ADMIN_PASSWORD_HASH", "").strip()
+
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+PUBLIC_ENDPOINTS = {"admin.login", "admin.static"}
+
+
+@bp.before_request
+def _require_login():
+    if request.endpoint in PUBLIC_ENDPOINTS:
+        return None
+    if not session.get("admin_user"):
+        return redirect(url_for("admin.login", next=request.path))
+    return None
+
+
+def _verify_password(pwd: str) -> bool:
+    if not ADMIN_HASH:
+        return False
+    try:
+        return apr_md5_crypt.verify(pwd, ADMIN_HASH)
+    except (ValueError, TypeError):
+        return False
+
+
+def _safe_next(target: str) -> str:
+    # Only allow same-origin admin paths to avoid open-redirect abuse.
+    if target and target.startswith("/admin/") and "://" not in target:
+        return target
+    return url_for("admin.dashboard")
+
+
+@bp.route("/login", methods=["GET", "POST"])
+def login():
+    if session.get("admin_user"):
+        return redirect(url_for("admin.dashboard"))
+
+    error, error_key = None, None
+    if request.method == "POST":
+        user = (request.form.get("username") or "").strip()
+        pwd  = request.form.get("password") or ""
+        if not ADMIN_USER or not ADMIN_HASH:
+            error_key = "a.login.err.config"
+            error = "Admin auth is not configured on this server. Set HONEY_ADMIN_USER and HONEY_ADMIN_PASSWORD_HASH."
+        elif user != ADMIN_USER or not _verify_password(pwd):
+            error_key = "a.login.err.invalid"
+            error = "Invalid username or password."
+        else:
+            session.clear()
+            session["admin_user"] = user
+            return redirect(_safe_next(request.args.get("next", "")))
+
+    return render_template(
+        "admin/login.html",
+        error=error,
+        error_key=error_key,
+        configured=bool(ADMIN_USER and ADMIN_HASH),
+    )
+
+
+@bp.route("/logout", methods=["POST"])
+def logout():
+    session.pop("admin_user", None)
+    return redirect(url_for("admin.login"))
 
 
 # ── DB helpers (use psycopg2; matches the existing stack) ─────────────────────
@@ -60,6 +136,26 @@ def _daemon_info():
     return None
 
 
+def _identity_share_string(info) -> str | None:
+    """Encode this node's identity into a single copy-pasteable token.
+
+    Format: 'honey1:' + urlsafe-base64(JSON). Peers paste this into their
+    add-peer form and the JS auto-fills url/node_name/contact + shows the
+    fingerprint for out-of-band verification.
+    """
+    if not info or not info.get("fingerprint"):
+        return None
+    payload = {
+        "fp":        info["fingerprint"],
+        "url":       os.environ.get("HONEY_PUBLIC_URL", "").strip(),
+        "node_name": (info.get("node_name") or "").strip(),
+        "contact":   (info.get("contact") or "").strip(),
+    }
+    raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    b64 = base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+    return IDENTITY_PREFIX + b64
+
+
 # ── Views ─────────────────────────────────────────────────────────────────────
 
 @bp.route("/")
@@ -87,6 +183,7 @@ def dashboard():
         pending=pending,
         federated_count=fed_count,
         daemon_url=DAEMON_INTERNAL_URL,
+        identity_share=_identity_share_string(info),
     )
 
 

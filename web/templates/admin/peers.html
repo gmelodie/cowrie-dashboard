@@ -1,14 +1,23 @@
 {% extends "admin/_layout.html" %}
+{% set active_page = 'peers' %}
 {% block content %}
 <section class="admin-card">
-  <h2>Peers ({{ peers|length }})</h2>
+  <h2><span data-i18n="a.peers">Peers</span> <span class="admin-count">{{ peers|length }}</span></h2>
   {% if peers %}
   <table class="admin-table">
     <thead>
       <tr>
-        <th>fingerprint</th><th>node</th><th>contact</th><th>url</th>
-        <th>status</th><th>score</th><th>we/they</th>
-        <th>last seen</th><th>last pull</th><th>entries</th><th>bad</th>
+        <th data-i18n="a.th.fingerprint">fingerprint</th>
+        <th data-i18n="a.th.node">node</th>
+        <th data-i18n="a.th.contact">contact</th>
+        <th data-i18n="a.th.url">url</th>
+        <th data-i18n="a.th.status">status</th>
+        <th data-i18n="a.th.score">score</th>
+        <th data-i18n="a.th.wethey">we/they</th>
+        <th data-i18n="a.th.lastseen">last seen</th>
+        <th data-i18n="a.th.lastpull">last pull</th>
+        <th data-i18n="a.th.entries">entries</th>
+        <th data-i18n="a.th.bad">bad</th>
       </tr>
     </thead>
     <tbody>
@@ -30,7 +39,7 @@
     </tbody>
   </table>
   {% else %}
-  <p class="admin-empty">No peers yet.</p>
+  <p class="admin-empty" data-i18n="a.peers.empty">No peers yet.</p>
   {% endif %}
 </section>
 {% endblock %}

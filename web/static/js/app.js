@@ -7,6 +7,7 @@ const STRINGS = {
     'gate.subtitle':       'automated honeypot — ssh / telnet',
     'gate.desc':           "Verify you're human to access live attack data.",
     'gate.btn':            '[ ENTER DASHBOARD ]',
+    'gate.admin':          '[ admin panel → ]',
     'gate.err.verify':     'Verification failed — please try again.',
     'gate.err.network':    'Network error — please try again.',
 
@@ -162,6 +163,7 @@ const STRINGS = {
     'gate.subtitle':       'honeypot automatizado — ssh / telnet',
     'gate.desc':           'Verifique que você é humano para acessar os dados de ataque em tempo real.',
     'gate.btn':            '[ ENTRAR NO PAINEL ]',
+    'gate.admin':          '[ painel admin → ]',
     'gate.err.verify':     'Verificação falhou — tente novamente.',
     'gate.err.network':    'Erro de rede — tente novamente.',
 

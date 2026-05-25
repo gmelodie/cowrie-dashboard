@@ -31,10 +31,19 @@ COPY crates ./crates
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
     cargo build --release --bin honey \
- && cp /build/target/release/honey /honey
+ && cp /build/target/release/honey /honey \
+ && mkdir -p /dirs/bloom /dirs/wordlists /dirs/stats /dirs/data/honey /dirs/geoip
 
 # ── runtime ───────────────────────────────────────────────────────────────────
+# Pre-create writable dirs with nonroot ownership. When docker mounts a named
+# volume onto a path that exists in the image, it inherits the path's ownership;
+# otherwise the freshly created mount point is owned by root and writes fail.
 FROM gcr.io/distroless/cc-debian12:nonroot
 COPY --from=builder /honey /usr/local/bin/honey
+COPY --from=builder --chown=nonroot:nonroot /dirs/bloom     /bloom
+COPY --from=builder --chown=nonroot:nonroot /dirs/wordlists /wordlists
+COPY --from=builder --chown=nonroot:nonroot /dirs/stats     /stats
+COPY --from=builder --chown=nonroot:nonroot /dirs/data      /data
+COPY --from=builder --chown=nonroot:nonroot /dirs/geoip     /geoip
 USER nonroot:nonroot
 ENTRYPOINT ["/usr/local/bin/honey"]

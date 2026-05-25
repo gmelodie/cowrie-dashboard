@@ -141,7 +141,13 @@ async fn compute_window(
     let downloads = count_filtered(pool, "SELECT count(*)::BIGINT FROM downloads d", "d.timestamp", since).await?;
     let unique_passwords = count_filtered(pool, "SELECT count(DISTINCT a.password)::BIGINT FROM auth a", "a.timestamp", since).await?;
     let unique_usernames = count_filtered(pool, "SELECT count(DISTINCT a.username)::BIGINT FROM auth a", "a.timestamp", since).await?;
-    let unique_malware_hashes = count_filtered(pool, "SELECT count(DISTINCT d.shasum)::BIGINT FROM downloads d WHERE d.shasum IS NOT NULL", "d.timestamp", since).await?;
+    let unique_malware_hashes = {
+        let sql = match since {
+            Some(_) => "SELECT count(DISTINCT d.shasum)::BIGINT FROM downloads d WHERE d.shasum IS NOT NULL AND d.timestamp >= $1",
+            None => "SELECT count(DISTINCT d.shasum)::BIGINT FROM downloads d WHERE d.shasum IS NOT NULL",
+        };
+        count_q(pool, sql, since).await?
+    };
 
     let success_pct: f64 = scalar_filtered(
         pool,

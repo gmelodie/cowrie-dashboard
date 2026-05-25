@@ -3,3 +3,4 @@ gunicorn==23.0.0
 requests==2.32.3
 psycopg2-binary==2.9.10
 Flask-WTF==1.2.2
+passlib==1.7.4

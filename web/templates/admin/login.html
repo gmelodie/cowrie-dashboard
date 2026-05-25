@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>honey — admin login</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin.css" />
+  <link rel="stylesheet" href="/static/css/admin-login.css" />
+  <script src="/static/js/admin-i18n.js" defer></script>
+  <script>
+    (function () {
+      var t = localStorage.getItem('theme') || 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+</head>
+<body class="login-body">
+
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-bar">
+        <span class="login-bar-dot"></span>
+        <span class="login-bar-dot"></span>
+        <span class="login-bar-dot"></span>
+        <span class="login-bar-title" data-i18n="a.login.bar">honey — admin login</span>
+      </div>
+
+      <div class="login-body-inner">
+        <p class="login-prompt-line">
+          <span class="login-prompt-sign">root@honey:~$</span>
+          ./admin.sh --auth<span class="login-blink">_</span>
+        </p>
+        <h1 class="login-title">HONEY</h1>
+        <p class="login-subtitle" data-i18n="a.login.title">federation admin</p>
+
+        {% if not configured %}
+        <p class="login-warn">
+          <strong data-i18n="a.login.notconfigured">not configured.</strong>
+          <span data-i18n="a.login.notconfigured.desc">set HONEY_ADMIN_USER and HONEY_ADMIN_PASSWORD_HASH in .env, then recreate the web container.</span>
+        </p>
+        {% endif %}
+
+        {% if error_key %}
+        <p class="login-error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span data-i18n="{{ error_key }}">{{ error }}</span>
+        </p>
+        {% endif %}
+
+        <form method="post" class="login-form" autocomplete="off">
+          <label class="login-field">
+            <span class="login-label" data-i18n="a.login.username">username</span>
+            <input type="text" name="username" required autofocus
+                   autocapitalize="off" autocorrect="off" spellcheck="false"
+                   value="{{ request.form.username or '' }}">
+          </label>
+          <label class="login-field">
+            <span class="login-label" data-i18n="a.login.password">password</span>
+            <input type="password" name="password" required>
+          </label>
+          <button type="submit" class="login-btn" {% if not configured %}disabled{% endif %}>
+            <span data-i18n="a.login.btn">[ AUTHENTICATE ]</span>
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <div class="login-foot">
+        <a href="/" class="login-back" data-i18n="a.login.back">← back to stats</a>
+        <div class="lang-tabs">
+          <button class="lang-tab" data-lang="en" type="button">EN</button>
+          <button class="lang-tab" data-lang="pt" type="button">PT</button>
+        </div>
+        <button class="admin-icon-btn" id="admin-theme-btn" title="Toggle theme" type="button">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('admin-theme-btn').addEventListener('click', function () {
+      var root = document.documentElement;
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      localStorage.setItem('theme', next);
+    });
+  </script>
+</body>
+</html>

@@ -1,95 +1,197 @@
 {% extends "admin/_layout.html" %}
+{% set active_page = 'dashboard' %}
 {% block content %}
 
 {% if info %}
 <section class="admin-card admin-card-identity">
-  <h2>This node</h2>
+  <h2 data-i18n="a.thisnode">This node</h2>
   <div class="admin-fp-block">
-    <span class="admin-fp-label">FINGERPRINT — share + verify OUT-OF-BAND</span>
+    <span class="admin-fp-label" data-i18n="a.fp.share">FINGERPRINT — share + verify OUT-OF-BAND</span>
     <code class="admin-fp">{{ info.fingerprint }}</code>
   </div>
   <dl class="admin-meta">
-    <dt>Node name</dt><dd>{{ info.node_name or '—' }}</dd>
-    <dt>Contact</dt><dd>{{ info.contact or '—' }}</dd>
-    <dt>Pubkey</dt><dd><code class="admin-mono-small">{{ info.pubkey_b64 }}</code></dd>
-    <dt>Version</dt><dd>{{ info.version }}</dd>
+    <dt data-i18n="a.field.node_name">Node name</dt><dd>{{ info.node_name or '—' }}</dd>
+    <dt data-i18n="a.field.contact">Contact</dt><dd>{{ info.contact or '—' }}</dd>
+    <dt data-i18n="a.field.pubkey">Pubkey</dt><dd><code class="admin-mono-small">{{ info.pubkey_b64 }}</code></dd>
+    <dt data-i18n="a.field.version">Version</dt><dd>{{ info.version }}</dd>
   </dl>
+
+  {% if identity_share %}
+  <div class="admin-share">
+    <div class="admin-share-head">
+      <span class="admin-share-label" data-i18n="a.share.label">SHARE TOKEN — paste into a peer's "add a peer" form</span>
+      <button type="button" class="admin-btn admin-btn-primary admin-share-copy"
+              data-identity="{{ identity_share }}" data-i18n="a.share.copy">copy</button>
+    </div>
+    <code class="admin-share-token">{{ identity_share }}</code>
+  </div>
+  {% endif %}
 </section>
 {% else %}
 <section class="admin-card admin-warn">
-  <strong>Daemon unreachable</strong> at <code>{{ daemon_url }}</code>.
-  Trust state still loads from the database, but sign-and-send actions will fail.
+  <strong data-i18n="a.daemon_unreachable">Daemon unreachable</strong>
+  <span data-i18n="a.daemon_warn">at this URL. Trust state still loads from the database, but sign-and-send actions will fail.</span>
+  <code class="admin-mono-small">{{ daemon_url }}</code>
 </section>
 {% endif %}
 
 <section class="admin-card">
-  <h2>Add a peer</h2>
-  <p class="admin-hint">
+  <h2 data-i18n="a.addpeer">Add a peer</h2>
+  <p class="admin-hint" data-i18n="a.addpeer.hint">
     Send a peering request to a remote honeypot. The remote admin must approve
     it on their end. Verify their fingerprint out-of-band before they approve yours.
   </p>
+
+  <div class="admin-paste-row">
+    <label class="admin-paste-label">
+      <span data-i18n="a.paste.label">Paste peer's share token (auto-fills fields below)</span>
+      <input type="text" id="paste-identity" placeholder="honey1:…"
+             autocapitalize="off" autocorrect="off" spellcheck="false">
+    </label>
+    <div id="paste-parsed" class="admin-paste-parsed" hidden>
+      <span class="admin-paste-fp-label" data-i18n="a.paste.fp">PARSED FINGERPRINT — VERIFY OUT-OF-BAND</span>
+      <code id="paste-fp" class="admin-fp"></code>
+    </div>
+    <p id="paste-error" class="admin-paste-error" hidden></p>
+  </div>
+
   <form method="post" action="{{ url_for('admin.request_peer') }}" class="admin-form">
-    <label>Remote URL
+    <label>
+      <span data-i18n="a.form.url">Remote URL</span>
       <input type="url" name="url" placeholder="https://peer.example.com" required>
     </label>
-    <label>Node name (optional)
+    <label>
+      <span data-i18n="a.form.node_name">Node name (optional)</span>
       <input type="text" name="node_name">
     </label>
-    <label>Contact (optional)
+    <label>
+      <span data-i18n="a.form.contact">Contact (optional)</span>
       <input type="text" name="contact" placeholder="ops@example.com">
     </label>
-    <label>Notes (optional)
+    <label>
+      <span data-i18n="a.form.notes">Notes (optional)</span>
       <input type="text" name="description">
     </label>
-    <button type="submit" class="admin-btn admin-btn-primary">send request</button>
+    <button type="submit" class="admin-btn admin-btn-primary" data-i18n="a.form.send">send request</button>
   </form>
 </section>
 
+<script>
+  (function () {
+    // ── Copy share token to clipboard ────────────────────────────────────
+    document.querySelectorAll('.admin-share-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var s = btn.dataset.identity || '';
+        if (!s) return;
+        var done = function () {
+          var orig = window.adminT ? window.adminT('a.share.copy') : 'copy';
+          btn.textContent = window.adminT ? window.adminT('a.share.copied') : '✓ copied';
+          setTimeout(function () { btn.textContent = orig; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(s).then(done, function () {});
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = s; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); done(); } catch (e) {}
+          document.body.removeChild(ta);
+        }
+      });
+    });
+
+    // ── Parse pasted share token ─────────────────────────────────────────
+    var PREFIX = 'honey1:';
+    function decode(token) {
+      if (!token.startsWith(PREFIX)) throw new Error('not a honey1 token');
+      var b64 = token.slice(PREFIX.length).trim();
+      b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+      b64 = b64 + '='.repeat((4 - b64.length % 4) % 4);
+      var json = atob(b64);
+      var obj = JSON.parse(json);
+      if (!obj.fp || !obj.url) throw new Error('missing fp or url');
+      return obj;
+    }
+
+    var input  = document.getElementById('paste-identity');
+    var parsed = document.getElementById('paste-parsed');
+    var fpEl   = document.getElementById('paste-fp');
+    var errEl  = document.getElementById('paste-error');
+    if (!input) return;
+
+    function apply() {
+      var v = input.value.trim();
+      if (!v) {
+        parsed.hidden = true; errEl.hidden = true; return;
+      }
+      try {
+        var obj = decode(v);
+        document.querySelector('input[name="url"]').value       = obj.url       || '';
+        document.querySelector('input[name="node_name"]').value = obj.node_name || '';
+        document.querySelector('input[name="contact"]').value   = obj.contact   || '';
+        fpEl.textContent = obj.fp;
+        parsed.hidden = false; errEl.hidden = true;
+      } catch (e) {
+        parsed.hidden = true;
+        var label = window.adminT ? window.adminT('a.paste.invalid') : 'Invalid share token';
+        errEl.textContent = label + ': ' + e.message;
+        errEl.hidden = false;
+      }
+    }
+    input.addEventListener('input', apply);
+    input.addEventListener('paste', function () { setTimeout(apply, 0); });
+  })();
+</script>
+
 <section class="admin-card">
-  <h2>Pending requests <span class="admin-count">{{ pending|length }}</span></h2>
+  <h2><span data-i18n="a.pending">Pending requests</span> <span class="admin-count">{{ pending|length }}</span></h2>
   {% if pending %}
     {% for p in pending %}
     <div class="admin-pending">
       <div class="admin-fp-block">
-        <span class="admin-fp-label">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
+        <span class="admin-fp-label" data-i18n="a.pending.fp">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
         <code class="admin-fp">{{ p.fingerprint }}</code>
       </div>
       <dl class="admin-meta">
-        <dt>Node</dt><dd>{{ p.node_name or '—' }}</dd>
-        <dt>Contact</dt><dd>{{ p.contact or '—' }}</dd>
-        <dt>URL</dt><dd>{{ p.url }}</dd>
+        <dt data-i18n="a.pending.node">Node</dt><dd>{{ p.node_name or '—' }}</dd>
+        <dt data-i18n="a.pending.contact">Contact</dt><dd>{{ p.contact or '—' }}</dd>
+        <dt data-i18n="a.pending.url">URL</dt><dd>{{ p.url }}</dd>
         {% if p.description %}
-        <dt>Notes</dt><dd>{{ p.description }}</dd>
+        <dt data-i18n="a.pending.notes">Notes</dt><dd>{{ p.description }}</dd>
         {% endif %}
-        <dt>Received</dt><dd>{{ p.received_at }}</dd>
+        <dt data-i18n="a.pending.received">Received</dt><dd>{{ p.received_at }}</dd>
       </dl>
       <div class="admin-actions">
-        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}">
-          <button class="admin-btn admin-btn-primary"
-                  onclick="return confirm('Did you verify the fingerprint out-of-band?\n\n{{ p.fingerprint }}')">
-            approve
-          </button>
+        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}"
+              data-confirm-key="a.confirm.approve" data-confirm-fp="{{ p.fingerprint }}">
+          <button class="admin-btn admin-btn-primary" data-i18n="a.btn.approve">approve</button>
         </form>
         <form method="post" action="{{ url_for('admin.reject', fp=p.fingerprint) }}">
-          <button class="admin-btn admin-btn-warn">reject</button>
+          <button class="admin-btn admin-btn-warn" data-i18n="a.btn.reject">reject</button>
         </form>
       </div>
     </div>
     {% endfor %}
   {% else %}
-    <p class="admin-empty">No pending requests.</p>
+    <p class="admin-empty" data-i18n="a.pending.empty">No pending requests.</p>
   {% endif %}
 </section>
 
 <section class="admin-card">
-  <h2>Peers <span class="admin-count">{{ peers|length }}</span> &middot;
-      <span class="admin-subcount">federated entries: {{ federated_count }}</span></h2>
+  <h2><span data-i18n="a.peers">Peers</span> <span class="admin-count">{{ peers|length }}</span> &middot;
+      <span class="admin-subcount"><span data-i18n="a.peers.fed">federated entries:</span> {{ federated_count }}</span></h2>
   {% if peers %}
     <table class="admin-table">
       <thead>
         <tr>
-          <th>fingerprint</th><th>node</th><th>status</th><th>score</th>
-          <th>we/they</th><th>last seen</th><th>entries</th><th>bad sigs</th><th></th>
+          <th data-i18n="a.th.fingerprint">fingerprint</th>
+          <th data-i18n="a.th.node">node</th>
+          <th data-i18n="a.th.status">status</th>
+          <th data-i18n="a.th.score">score</th>
+          <th data-i18n="a.th.wethey">we/they</th>
+          <th data-i18n="a.th.lastseen">last seen</th>
+          <th data-i18n="a.th.entries">entries</th>
+          <th data-i18n="a.th.bad">bad sigs</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -105,16 +207,19 @@
         <td>{{ p.bad_signatures }}</td>
         <td class="admin-actions">
           <form method="post" action="{{ url_for('admin.pull_now', fp=p.fingerprint) }}">
-            <button class="admin-btn">pull now</button>
+            <button class="admin-btn" data-i18n="a.btn.pullnow">pull now</button>
           </form>
           <form method="post" action="{{ url_for('admin.adjust_score', fp=p.fingerprint) }}">
             <input type="number" name="delta" value="-5" style="width:4em">
-            <button class="admin-btn">score</button>
+            <button class="admin-btn" data-i18n="a.btn.score">score</button>
           </form>
           <form method="post" action="{{ url_for('admin.revoke', fp=p.fingerprint) }}"
-                onsubmit="return confirm('Revoke {{ p.fingerprint }}?')">
-            <label class="admin-purge"><input type="checkbox" name="purge" value="1"> purge entries</label>
-            <button class="admin-btn admin-btn-warn">revoke</button>
+                data-confirm-key="a.confirm.revoke" data-confirm-fp="{{ p.fingerprint }}">
+            <label class="admin-purge">
+              <input type="checkbox" name="purge" value="1">
+              <span data-i18n="a.lbl.purge">purge entries</span>
+            </label>
+            <button class="admin-btn admin-btn-warn" data-i18n="a.btn.revoke">revoke</button>
           </form>
         </td>
       </tr>
@@ -122,8 +227,20 @@
       </tbody>
     </table>
   {% else %}
-    <p class="admin-empty">No peers yet. Add one above to start.</p>
+    <p class="admin-empty" data-i18n="a.peers.empty">No peers yet. Add one above to start.</p>
   {% endif %}
 </section>
+
+<script>
+  // Confirm dialogs that need the translated string at click time
+  document.querySelectorAll('form[data-confirm-key]').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      var key = f.dataset.confirmKey;
+      var fp = f.dataset.confirmFp || '';
+      var msg = (window.adminT ? window.adminT(key) : key) + (fp ? '\n\n' + fp : '');
+      if (!window.confirm(msg)) e.preventDefault();
+    });
+  });
+</script>
 
 {% endblock %}
