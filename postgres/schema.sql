@@ -98,3 +98,57 @@ CREATE TABLE IF NOT EXISTS campaign_events (
 
 CREATE INDEX IF NOT EXISTS sessions_ip_idx       ON sessions (ip);
 CREATE INDEX IF NOT EXISTS sessions_protocol_idx ON sessions (protocol);
+
+-- ── Federation ────────────────────────────────────────────────────────────────
+-- See honey/ for the Rust binary that drives these tables.
+
+CREATE TABLE IF NOT EXISTS federation_peers (
+    fingerprint       TEXT PRIMARY KEY,
+    pubkey_b64        TEXT        NOT NULL,
+    url               TEXT        NOT NULL,
+    node_name         TEXT        NOT NULL DEFAULT '',
+    contact           TEXT        NOT NULL DEFAULT '',
+    status            TEXT        NOT NULL DEFAULT 'trusted',   -- trusted | revoked
+    they_approved_us  BOOLEAN     NOT NULL DEFAULT FALSE,
+    we_approved_them  BOOLEAN     NOT NULL DEFAULT FALSE,
+    local_score       INTEGER     NOT NULL DEFAULT 0,
+    added_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen         TIMESTAMPTZ,
+    last_pull_at      TIMESTAMPTZ,
+    entries_received  BIGINT      NOT NULL DEFAULT 0,
+    bad_signatures    BIGINT      NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS federation_pending_requests (
+    fingerprint  TEXT PRIMARY KEY,
+    pubkey_b64   TEXT        NOT NULL,
+    url          TEXT        NOT NULL,
+    node_name    TEXT        NOT NULL DEFAULT '',
+    contact      TEXT        NOT NULL DEFAULT '',
+    description  TEXT        NOT NULL DEFAULT '',
+    received_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- INVARIANT: rows here are ALWAYS from peers; /wordlist/fetch never serves them.
+-- Local observations live in `auth`. Do not "optimise" by merging.
+CREATE TABLE IF NOT EXISTS federated_wordlist_entries (
+    id                  BIGSERIAL PRIMARY KEY,
+    username            TEXT        NOT NULL,
+    password            TEXT        NOT NULL,
+    source_fingerprint  TEXT        NOT NULL
+                                    REFERENCES federation_peers(fingerprint)
+                                    ON DELETE CASCADE,
+    count               BIGINT      NOT NULL DEFAULT 1,
+    first_seen          TIMESTAMPTZ NOT NULL,
+    last_seen           TIMESTAMPTZ NOT NULL,
+    UNIQUE (username, password, source_fingerprint)
+);
+CREATE INDEX IF NOT EXISTS fwle_last_seen_idx ON federated_wordlist_entries (last_seen);
+CREATE INDEX IF NOT EXISTS fwle_source_idx    ON federated_wordlist_entries (source_fingerprint);
+
+CREATE TABLE IF NOT EXISTS federation_seen_nonces (
+    nonce       TEXT PRIMARY KEY,
+    sender      TEXT        NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS fsn_exp_idx ON federation_seen_nonces (expires_at);

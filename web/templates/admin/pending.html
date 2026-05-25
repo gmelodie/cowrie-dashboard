@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<section class="admin-card">
+  <h2>Pending requests ({{ pending|length }})</h2>
+  {% if pending %}
+    {% for p in pending %}
+    <div class="admin-pending">
+      <div class="admin-fp-block">
+        <span class="admin-fp-label">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
+        <code class="admin-fp">{{ p.fingerprint }}</code>
+      </div>
+      <dl class="admin-meta">
+        <dt>Node</dt><dd>{{ p.node_name or '—' }}</dd>
+        <dt>Contact</dt><dd>{{ p.contact or '—' }}</dd>
+        <dt>URL</dt><dd>{{ p.url }}</dd>
+        {% if p.description %}<dt>Notes</dt><dd>{{ p.description }}</dd>{% endif %}
+        <dt>Received</dt><dd>{{ p.received_at }}</dd>
+      </dl>
+      <div class="admin-actions">
+        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}">
+          <button class="admin-btn admin-btn-primary"
+                  onclick="return confirm('Did you verify the fingerprint out-of-band?\n\n{{ p.fingerprint }}')">approve</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.reject', fp=p.fingerprint) }}">
+          <button class="admin-btn admin-btn-warn">reject</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="admin-empty">No pending requests.</p>
+  {% endif %}
+</section>
+{% endblock %}

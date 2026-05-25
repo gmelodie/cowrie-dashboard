@@ -8,6 +8,10 @@ from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
 
+# Federation admin panel (mounted at /admin/).
+from admin import bp as admin_bp  # noqa: E402
+app.register_blueprint(admin_bp)
+
 
 RECAPTCHA_SEC   = os.environ.get("RECAPTCHA_SECRET_KEY", "")
 RECAPTCHA_SITE  = os.environ.get("RECAPTCHA_SITE_KEY", "")

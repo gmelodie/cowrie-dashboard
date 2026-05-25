@@ -1,0 +1,59 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/cli",
+    "crates/config",
+    "crates/db",
+    "crates/identity",
+    "crates/jobs",
+    "crates/protocol",
+    "crates/server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+honey-config   = { path = "crates/config" }
+honey-db       = { path = "crates/db" }
+honey-identity = { path = "crates/identity" }
+honey-jobs     = { path = "crates/jobs" }
+honey-protocol = { path = "crates/protocol" }
+honey-server   = { path = "crates/server" }
+
+anyhow              = "1"
+thiserror           = "1"
+clap                = { version = "4", features = ["derive", "env"] }
+tokio               = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tracing             = "0.1"
+tracing-subscriber  = { version = "0.3", features = ["env-filter", "fmt"] }
+serde               = { version = "1", features = ["derive"] }
+serde_json          = "1"
+sqlx                = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-rustls", "macros", "chrono"] }
+ed25519-dalek       = { version = "2", features = ["rand_core"] }
+rand_core           = { version = "0.6", features = ["std"] }
+sha2                = "0.10"
+data-encoding       = "2"
+base64              = "0.22"
+chrono              = { version = "0.4", default-features = false, features = ["serde", "std", "clock"] }
+reqwest             = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+growable-bloom-filter = "2"
+maxminddb           = "0.24"
+bincode             = "1.3"
+flate2              = "1"
+tempfile            = "3"
+futures-util        = "0.3"
+serde_jcs           = "0.1"
+rand                = "0.8"
+axum                = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "tracing", "macros"] }
+tower-http          = { version = "0.6", features = ["trace"] }
+tower               = "0.5"
+http                = "1"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

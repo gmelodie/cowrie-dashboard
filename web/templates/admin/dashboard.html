@@ -1,0 +1,129 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+
+{% if info %}
+<section class="admin-card admin-card-identity">
+  <h2>This node</h2>
+  <div class="admin-fp-block">
+    <span class="admin-fp-label">FINGERPRINT — share + verify OUT-OF-BAND</span>
+    <code class="admin-fp">{{ info.fingerprint }}</code>
+  </div>
+  <dl class="admin-meta">
+    <dt>Node name</dt><dd>{{ info.node_name or '—' }}</dd>
+    <dt>Contact</dt><dd>{{ info.contact or '—' }}</dd>
+    <dt>Pubkey</dt><dd><code class="admin-mono-small">{{ info.pubkey_b64 }}</code></dd>
+    <dt>Version</dt><dd>{{ info.version }}</dd>
+  </dl>
+</section>
+{% else %}
+<section class="admin-card admin-warn">
+  <strong>Daemon unreachable</strong> at <code>{{ daemon_url }}</code>.
+  Trust state still loads from the database, but sign-and-send actions will fail.
+</section>
+{% endif %}
+
+<section class="admin-card">
+  <h2>Add a peer</h2>
+  <p class="admin-hint">
+    Send a peering request to a remote honeypot. The remote admin must approve
+    it on their end. Verify their fingerprint out-of-band before they approve yours.
+  </p>
+  <form method="post" action="{{ url_for('admin.request_peer') }}" class="admin-form">
+    <label>Remote URL
+      <input type="url" name="url" placeholder="https://peer.example.com" required>
+    </label>
+    <label>Node name (optional)
+      <input type="text" name="node_name">
+    </label>
+    <label>Contact (optional)
+      <input type="text" name="contact" placeholder="ops@example.com">
+    </label>
+    <label>Notes (optional)
+      <input type="text" name="description">
+    </label>
+    <button type="submit" class="admin-btn admin-btn-primary">send request</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <h2>Pending requests <span class="admin-count">{{ pending|length }}</span></h2>
+  {% if pending %}
+    {% for p in pending %}
+    <div class="admin-pending">
+      <div class="admin-fp-block">
+        <span class="admin-fp-label">FINGERPRINT — VERIFY OUT-OF-BAND BEFORE APPROVING</span>
+        <code class="admin-fp">{{ p.fingerprint }}</code>
+      </div>
+      <dl class="admin-meta">
+        <dt>Node</dt><dd>{{ p.node_name or '—' }}</dd>
+        <dt>Contact</dt><dd>{{ p.contact or '—' }}</dd>
+        <dt>URL</dt><dd>{{ p.url }}</dd>
+        {% if p.description %}
+        <dt>Notes</dt><dd>{{ p.description }}</dd>
+        {% endif %}
+        <dt>Received</dt><dd>{{ p.received_at }}</dd>
+      </dl>
+      <div class="admin-actions">
+        <form method="post" action="{{ url_for('admin.approve', fp=p.fingerprint) }}">
+          <button class="admin-btn admin-btn-primary"
+                  onclick="return confirm('Did you verify the fingerprint out-of-band?\n\n{{ p.fingerprint }}')">
+            approve
+          </button>
+        </form>
+        <form method="post" action="{{ url_for('admin.reject', fp=p.fingerprint) }}">
+          <button class="admin-btn admin-btn-warn">reject</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p class="admin-empty">No pending requests.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Peers <span class="admin-count">{{ peers|length }}</span> &middot;
+      <span class="admin-subcount">federated entries: {{ federated_count }}</span></h2>
+  {% if peers %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>fingerprint</th><th>node</th><th>status</th><th>score</th>
+          <th>we/they</th><th>last seen</th><th>entries</th><th>bad sigs</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for p in peers %}
+      <tr>
+        <td><code class="admin-mono-small">{{ p.fingerprint }}</code></td>
+        <td>{{ p.node_name or '—' }}</td>
+        <td><span class="admin-status admin-status-{{ p.status }}">{{ p.status }}</span></td>
+        <td>{{ p.local_score }}</td>
+        <td>{{ 'y' if p.we_approved_them else 'n' }}/{{ 'y' if p.they_approved_us else 'n' }}</td>
+        <td>{{ p.last_seen or '—' }}</td>
+        <td>{{ p.entries_received }}</td>
+        <td>{{ p.bad_signatures }}</td>
+        <td class="admin-actions">
+          <form method="post" action="{{ url_for('admin.pull_now', fp=p.fingerprint) }}">
+            <button class="admin-btn">pull now</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.adjust_score', fp=p.fingerprint) }}">
+            <input type="number" name="delta" value="-5" style="width:4em">
+            <button class="admin-btn">score</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.revoke', fp=p.fingerprint) }}"
+                onsubmit="return confirm('Revoke {{ p.fingerprint }}?')">
+            <label class="admin-purge"><input type="checkbox" name="purge" value="1"> purge entries</label>
+            <button class="admin-btn admin-btn-warn">revoke</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="admin-empty">No peers yet. Add one above to start.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

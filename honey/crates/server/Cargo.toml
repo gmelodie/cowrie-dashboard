@@ -1,0 +1,29 @@
+[package]
+name = "honey-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+axum.workspace = true
+tower-http.workspace = true
+tower.workspace = true
+http.workspace = true
+sqlx.workspace = true
+chrono.workspace = true
+reqwest.workspace = true
+base64.workspace = true
+sha2.workspace = true
+ed25519-dalek.workspace = true
+
+honey-config.workspace = true
+honey-db.workspace = true
+honey-identity.workspace = true
+honey-protocol.workspace = true

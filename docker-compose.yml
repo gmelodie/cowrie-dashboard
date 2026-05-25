@@ -49,24 +49,22 @@ services:
       - ./cowrie/var/log/cowrie:/cowrie/cowrie-git/var/log/cowrie
       - ./cowrie/var/lib/cowrie:/cowrie/cowrie-git/var/lib/cowrie
 
-  # GeoIP database downloader — runs once, skips if databases already present
+  # GeoIP database downloader (Rust port of geoip-init.sh) — runs once
   geoip-init:
     build:
-      context: ./scripts
-      dockerfile: Dockerfile.geoip-init
+      context: ./honey
     restart: "no"
     environment:
       - GEOIP_DIR=/geoip
+      - RUST_LOG=${RUST_LOG:-info}
     volumes:
-      - ./scripts/geoip-init.sh:/geoip-init.sh:ro
       - geoip:/geoip
-    entrypoint: ["/bin/sh", "/geoip-init.sh"]
+    command: ["init", "geoip"]
 
-  # Stats generator — runs on startup then every 5 minutes
-  stats-gen:
+  # Stats generator (Rust port of generate-stats.py) — runs on startup then every 5 min
+  honey-jobs-stats:
     build:
-      context: ./scripts
-      dockerfile: Dockerfile.stats-gen
+      context: ./honey
     restart: unless-stopped
     network_mode: host
     env_file: .env
@@ -80,42 +78,38 @@ services:
       - WORDLIST_DIR=/wordlists
       - GEOIP_COUNTRY_DB=/geoip/country.mmdb
       - GEOIP_ASN_DB=/geoip/asn.mmdb
+      - RUST_LOG=${RUST_LOG:-info}
     volumes:
-      - ./scripts/generate-stats.py:/generate-stats.py:ro
-      - ./scripts/stats-gen.sh:/stats-gen.sh:ro
       - stats:/stats
       - wordlists:/wordlists:ro
       - geoip:/geoip:ro
-    entrypoint: ["/bin/sh", "/stats-gen.sh"]
+    command: ["jobs", "stats", "--loop"]
     depends_on:
       postgres-init:
         condition: service_completed_successfully
       geoip-init:
         condition: service_completed_successfully
 
-  # Bloom filter builder — runs once on startup, skips if filter already exists
+  # Bloom filter builder (Rust port of bloom-init.py) — runs once
   bloom-init:
     build:
-      context: ./scripts
-      dockerfile: Dockerfile.bloom-init
+      context: ./honey
     restart: "no"
     network_mode: host
     environment:
       - BLOOM_DIR=/bloom
+      - RUST_LOG=${RUST_LOG:-info}
       # Space-separated URLs; downloaded one at a time to minimise disk usage.
       # Lists: xato-net 1 M, NCSC 100 k, Pwdb top 1 M, probable top 12 k, darkweb 2017 top 10 k.
-      # Override in .env to customise.
       - BLOOM_WORDLIST_URLS=${BLOOM_WORDLIST_URLS:-https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/100k-most-used-passwords-NCSC.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/Pwdb_top-1000000.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/probable-v2_top-12000.txt https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/darkweb2017_top-10000.txt}
     volumes:
-      - ./scripts/bloom-init.py:/bloom-init.py:ro
       - bloom:/bloom
-    entrypoint: ["/usr/local/bin/python", "/bloom-init.py"]
+    command: ["init", "bloom"]
 
-  # Wordlist generator — runs on startup then every 6 hours via cron
-  wordlist-gen:
+  # Wordlist generator (Rust port of generate-wordlists.py)
+  honey-jobs-wordlist:
     build:
-      context: ./scripts
-      dockerfile: Dockerfile.wordlist-gen
+      context: ./honey
     restart: unless-stopped
     network_mode: host
     env_file: .env
@@ -127,15 +121,42 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - WORDLIST_DIR=/wordlists
       - BLOOM_DIR=/bloom
+      - RUST_LOG=${RUST_LOG:-info}
     volumes:
-      - ./scripts/generate-wordlists.py:/generate-wordlists.py:ro
-      - ./scripts/wordlist-gen.sh:/wordlist-gen.sh:ro
       - wordlists:/wordlists
-      - bloom:/bloom
-    entrypoint: ["/bin/sh", "/wordlist-gen.sh"]
+      - bloom:/bloom:ro
+    command: ["jobs", "wordlists", "--loop"]
     depends_on:
+      postgres-init:
+        condition: service_completed_successfully
       bloom-init:
         condition: service_completed_successfully
+
+  # Federation daemon — peer-to-peer wordlist exchange + admin loopback API
+  honey-federation:
+    build:
+      context: ./honey
+    container_name: honey-federation
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST:-127.0.0.1}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - HONEY_DATA_DIR=/data/honey
+      - HONEY_NODE_NAME=${HONEY_NODE_NAME:-}
+      - HONEY_CONTACT=${HONEY_CONTACT:-}
+      - HONEY_FEDERATION_BIND=${HONEY_FEDERATION_BIND:-127.0.0.1:8088}
+      - HONEY_PUBLIC_URL=${HONEY_PUBLIC_URL:-http://127.0.0.1:8088}
+      - HONEY_POLL_INTERVAL_SECS=${HONEY_POLL_INTERVAL_SECS:-10}
+      - RUST_LOG=${RUST_LOG:-info}
+    volumes:
+      - honey-data:/data/honey
+    command: ["federation", "daemon"]
+    depends_on:
       postgres-init:
         condition: service_completed_successfully
 
@@ -172,11 +193,14 @@ services:
     env_file: .env
     environment:
       - TARGET_HOST=${TARGET_HOST}
+      - HONEY_ADMIN_USER=${HONEY_ADMIN_USER:-}
+      - HONEY_ADMIN_PASSWORD_HASH=${HONEY_ADMIN_PASSWORD_HASH:-}
     volumes:
       - ./letsencrypt:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - web
+      - honey-federation
 
   # Certbot — automatic certificate renewal (runs every 12 h)
   certbot:
@@ -198,3 +222,4 @@ volumes:
   stats:
   bloom:
   geoip:
+  honey-data:

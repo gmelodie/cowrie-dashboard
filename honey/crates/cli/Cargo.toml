@@ -1,0 +1,29 @@
+[package]
+name = "honey-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "honey"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+honey-config.workspace = true
+honey-db.workspace = true
+honey-identity.workspace = true
+honey-jobs.workspace = true
+honey-protocol.workspace = true
+honey-server.workspace = true
+
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true

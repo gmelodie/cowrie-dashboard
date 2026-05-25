@@ -28,6 +28,18 @@ if [ ! -f "/etc/nginx/ssl/catchall.crt" ]; then
         -subj   "/CN=localhost" 2>/dev/null
 fi
 
+# Generate the basic-auth file for /admin/ from HONEY_ADMIN_USER + HONEY_ADMIN_PASSWORD_HASH.
+# HONEY_ADMIN_PASSWORD_HASH must be in htpasswd format (use `openssl passwd -apr1`).
+if [ -n "${HONEY_ADMIN_USER}" ] && [ -n "${HONEY_ADMIN_PASSWORD_HASH}" ]; then
+    echo "${HONEY_ADMIN_USER}:${HONEY_ADMIN_PASSWORD_HASH}" > /etc/nginx/admin.htpasswd
+    chmod 640 /etc/nginx/admin.htpasswd
+    echo "[nginx] /admin/ basic-auth configured for user '${HONEY_ADMIN_USER}'"
+else
+    # Sentinel — no creds set, /admin/ stays locked down.
+    echo "*:*locked-by-default" > /etc/nginx/admin.htpasswd
+    echo "[nginx] HONEY_ADMIN_USER not set — /admin/ will reject all requests" >&2
+fi
+
 # Substitute only our env vars; nginx variables like $host stay untouched
 envsubst '${TARGET_HOST} ${CERT_PATH}' \
     < /etc/nginx/templates/default.conf.template \

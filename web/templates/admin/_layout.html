@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>honey — federation admin</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/admin.css" />
+</head>
+<body>
+  <header class="admin-header">
+    <div class="admin-bar">
+      <span class="admin-bar-title">honey — federation admin</span>
+      <nav class="admin-nav">
+        <a href="{{ url_for('admin.dashboard') }}">dashboard</a>
+        <a href="{{ url_for('admin.peers') }}">peers</a>
+        <a href="{{ url_for('admin.pending') }}">pending</a>
+        <a href="/" class="admin-nav-back">← back to stats</a>
+      </nav>
+    </div>
+  </header>
+
+  {% set msg = request.args.get('m') %}
+  {% set err = request.args.get('e') %}
+  {% if msg or err %}
+  <div class="admin-flash {{ 'admin-flash-err' if err else 'admin-flash-ok' }}">
+    {{ err or msg }}
+  </div>
+  {% endif %}
+
+  <main class="admin-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

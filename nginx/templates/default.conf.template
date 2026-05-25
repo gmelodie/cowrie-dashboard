@@ -1,3 +1,6 @@
+# ─── Rate-limit zones ─────────────────────────────────────────────────────────
+limit_req_zone $binary_remote_addr zone=peer_request:1m rate=10r/m;
+
 # ─── HTTP ────────────────────────────────────────────────────────────────────
 
 # Target host: ACME challenge pass-through + redirect to HTTPS
@@ -41,6 +44,29 @@ server {
     add_header X-Frame-Options           DENY                                           always;
     add_header X-Content-Type-Options    nosniff                                        always;
     add_header Referrer-Policy           "strict-origin-when-cross-origin"              always;
+
+    # Admin panel — basic auth at the edge, never reaches Flask without it.
+    location /admin/ {
+        auth_basic "honey admin";
+        auth_basic_user_file /etc/nginx/admin.htpasswd;
+        proxy_pass            http://127.0.0.1:8373;
+        proxy_set_header      Host              $host;
+        proxy_set_header      X-Real-IP         $remote_addr;
+        proxy_set_header      X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header      X-Forwarded-Proto $scheme;
+        proxy_read_timeout    30s;
+    }
+
+    # Federation peer endpoints → Rust daemon. Internal endpoints (`/internal/*`)
+    # are intentionally NOT routed here; only loopback callers reach them.
+    location = /info       { proxy_pass http://127.0.0.1:8088; }
+    location = /health     { proxy_pass http://127.0.0.1:8088; }
+    location /wordlist/    { proxy_pass http://127.0.0.1:8088; }
+    location /reputation/  { proxy_pass http://127.0.0.1:8088; }
+    location = /peer/request {
+        limit_req zone=peer_request burst=5 nodelay;
+        proxy_pass http://127.0.0.1:8088;
+    }
 
     location / {
         proxy_pass            http://127.0.0.1:8373;

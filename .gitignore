@@ -1,3 +1,4 @@
 .env
 cowrie/var/
 wordlists/
+honey/target/

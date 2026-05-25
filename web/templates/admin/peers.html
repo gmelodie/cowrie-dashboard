@@ -1,0 +1,36 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<section class="admin-card">
+  <h2>Peers ({{ peers|length }})</h2>
+  {% if peers %}
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>fingerprint</th><th>node</th><th>contact</th><th>url</th>
+        <th>status</th><th>score</th><th>we/they</th>
+        <th>last seen</th><th>last pull</th><th>entries</th><th>bad</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in peers %}
+    <tr>
+      <td><code class="admin-mono-small">{{ p.fingerprint }}</code></td>
+      <td>{{ p.node_name or '—' }}</td>
+      <td>{{ p.contact or '—' }}</td>
+      <td>{{ p.url }}</td>
+      <td><span class="admin-status admin-status-{{ p.status }}">{{ p.status }}</span></td>
+      <td>{{ p.local_score }}</td>
+      <td>{{ 'y' if p.we_approved_them else 'n' }}/{{ 'y' if p.they_approved_us else 'n' }}</td>
+      <td>{{ p.last_seen or '—' }}</td>
+      <td>{{ p.last_pull_at or '—' }}</td>
+      <td>{{ p.entries_received }}</td>
+      <td>{{ p.bad_signatures }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="admin-empty">No peers yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
